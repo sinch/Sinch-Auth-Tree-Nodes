@@ -16,14 +16,13 @@
 
 package com.sinch.authNode;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-
 import org.forgerock.openam.auth.node.api.AbstractNodeAmPlugin;
 import org.forgerock.openam.auth.node.api.Node;
 import org.forgerock.openam.plugins.PluginException;
-import org.forgerock.openam.plugins.StartupType;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
 
 /**
@@ -71,7 +70,7 @@ public class SinchAuthNodePlugin extends AbstractNodeAmPlugin {
     @Override
     protected Map<String, Iterable<? extends Class<? extends Node>>> getNodesByVersion() {
         return Collections.singletonMap(SinchAuthNodePlugin.currentVersion,
-                Arrays.asList(SinchAuthNode.class, SinchCodeCollectorCodeNode.class));
+                Arrays.asList(SinchAuthenticationNode.class, SinchCodeCollectorCodeNode.class));
     }
 
     /**

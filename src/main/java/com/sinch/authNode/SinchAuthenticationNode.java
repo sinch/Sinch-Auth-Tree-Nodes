@@ -36,14 +36,14 @@ import java.util.ResourceBundle;
  * for this request.
  */
 @Node.Metadata(outcomeProvider = SingleOutcomeNode.OutcomeProvider.class,
-        configClass = SinchAuthNode.Config.class)
-public class SinchAuthNode extends SingleOutcomeNode {
+        configClass = SinchAuthenticationNode.Config.class)
+public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     static final String USER_PHONE_KEY = "phoneNumber";
 
-    private static final String BUNDLE = "com/sinch/authNode/SinchAuthNode";
+    private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
 
-    private final Logger logger = LoggerFactory.getLogger(SinchAuthNode.class);
+    private final Logger logger = LoggerFactory.getLogger(SinchAuthenticationNode.class);
     private final Config config;
 
     /**
@@ -53,7 +53,7 @@ public class SinchAuthNode extends SingleOutcomeNode {
      * @throws NodeProcessException If the configuration was not valid.
      */
     @Inject
-    public SinchAuthNode(@Assisted Config config, CoreWrapper coreWrapper) throws NodeProcessException {
+    public SinchAuthenticationNode(@Assisted Config config, CoreWrapper coreWrapper) throws NodeProcessException {
         this.config = config;
     }
 
