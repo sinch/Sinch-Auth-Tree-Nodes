@@ -18,6 +18,10 @@
 package com.sinch.authNode;
 
 import com.google.inject.assistedinject.Assisted;
+import com.sinch.verification.model.VerificationMethodType;
+import com.sinch.verification.network.auth.AppKeyAuthorizationMethod;
+import com.sinch.verification.process.config.VerificationMethodConfig;
+import com.sinch.verification.process.method.VerificationMethod;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
@@ -59,6 +63,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     @Override
     public Action process(TreeContext context) {
+        logger.debug("Process function called");
         ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
         String userPhone = context.sharedState.get(USER_PHONE_KEY).asString();
         if (userPhone == null) {
@@ -72,9 +77,19 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 )).build();
             }
         }
+        initiateVerification(config.appHash(), userPhone, config.verificationMethod());
         return goToNext()
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
                 .build();
+    }
+
+    private void initiateVerification(String appHash, String phoneNumber, VerificationMethodType verificationMethod) {
+        VerificationMethodConfig verificationMethodConfig = VerificationMethodConfig.Builder.getInstance()
+                .authorizationMethod(new AppKeyAuthorizationMethod(appHash))
+                .verificationMethod(verificationMethod)
+                .number(phoneNumber).build();
+
+        VerificationMethod.Builder.getInstance().verificationConfig(verificationMethodConfig).build().initiate();
     }
 
     /**
@@ -84,6 +99,11 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         @Attribute(order = 1, validators = {RequiredValueValidator.class})
         default String appHash() {
             return "";
+        }
+
+        @Attribute(order = 2, validators = {RequiredValueValidator.class})
+        default VerificationMethodType verificationMethod() {
+            return VerificationMethodType.SMS;
         }
     }
 

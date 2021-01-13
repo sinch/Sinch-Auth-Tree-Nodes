@@ -7,6 +7,11 @@
       <option name="url" value="https://repo.maven.apache.org/maven2" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="bintray-kotlin-kotlinx" />
+      <option name="name" value="bintray" />
+      <option name="url" value="https://kotlin.bintray.com/kotlinx" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="forgerock-private-releases" />
       <option name="name" value="forgerock-private-releases" />
       <option name="url" value="https://maven.forgerock.org:443/repo/private-releases" />
@@ -30,6 +35,11 @@
       <option name="id" value="forgerock-private-snapshots" />
       <option name="name" value="forgerock-private-snapshots" />
       <option name="url" value="https://maven.forgerock.org:443/repo/private-snapshots" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jcenter" />
+      <option name="name" value="jcenter" />
+      <option name="url" value="https://jcenter.bintray.com" />
     </remote-repository>
   </component>
 </project>
