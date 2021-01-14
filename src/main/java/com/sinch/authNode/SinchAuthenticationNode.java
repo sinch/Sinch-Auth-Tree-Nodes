@@ -19,14 +19,17 @@ package com.sinch.authNode;
 
 import com.google.inject.assistedinject.Assisted;
 import com.sinch.verification.model.VerificationMethodType;
+import com.sinch.verification.model.initiation.InitiationResponseData;
 import com.sinch.verification.network.auth.AppKeyAuthorizationMethod;
 import com.sinch.verification.process.config.VerificationMethodConfig;
+import com.sinch.verification.process.listener.InitiationListener;
 import com.sinch.verification.process.method.VerificationMethod;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
 import org.forgerock.openam.authentication.callbacks.PollingWaitCallback;
 import org.forgerock.openam.core.CoreWrapper;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +45,17 @@ import java.util.ResourceBundle;
  */
 @Node.Metadata(outcomeProvider = SingleOutcomeNode.OutcomeProvider.class,
         configClass = SinchAuthenticationNode.Config.class)
-public class SinchAuthenticationNode extends SingleOutcomeNode {
+public class SinchAuthenticationNode extends SingleOutcomeNode implements InitiationListener {
 
     static final String USER_PHONE_KEY = "phoneNumber";
+    static final String INITIATED_ID_KEY = "initiatedId";
 
     private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
 
     private final Logger logger = LoggerFactory.getLogger(SinchAuthenticationNode.class);
     private final Config config;
+
+    private String initiatedVerificationId = null;
 
     /**
      * Create the node.
@@ -71,7 +77,9 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         if (userPhone == null) {
             if (context.hasCallbacks() && context.getCallback(NameCallback.class).isPresent()) {
                 userPhone = context.getCallback(NameCallback.class).get().getName();
+                initiateVerification(config.appHash(), userPhone, config.verificationMethod());
                 logger.debug("User phone is " + userPhone);
+                return processInitiation(context, userPhone);
             } else {
                 return Action.send(Arrays.asList(
                         new TextOutputCallback(TextOutputCallback.INFORMATION, bundle.getString("callback.phoneNumberText")),
@@ -79,20 +87,49 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 )).build();
             }
         }
+        return processInitiation(context, userPhone);
+    }
 
-        initiateVerification(config.appHash(), userPhone, config.verificationMethod());
-        return goToNext()
-                .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
-                .build();
+    private Action processInitiation(TreeContext context, String userPhone) {
+        if (initiatedVerificationId != null) {
+            logger.debug("Initiated verification id is " + initiatedVerificationId);
+            return goToNext()
+                    .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, initiatedVerificationId))
+                    .build();
+        } else {
+            logger.debug("Waiting for initiation response");
+            return Action.send(
+                    new PollingWaitCallback.PollingWaitCallbackBuilder()
+                            .withWaitTime(String.valueOf(1000))
+                            .build())
+                    .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
+                    .build();
+        }
     }
 
     private void initiateVerification(String appHash, String phoneNumber, VerificationMethodType verificationMethod) {
         VerificationMethodConfig verificationMethodConfig = VerificationMethodConfig.Builder.getInstance()
                 .authorizationMethod(new AppKeyAuthorizationMethod(appHash))
                 .verificationMethod(verificationMethod)
-                .number(phoneNumber).build();
+                .number(phoneNumber)
+                .build();
 
-        VerificationMethod.Builder.getInstance().verificationConfig(verificationMethodConfig).build().initiate();
+        VerificationMethod.Builder.getInstance()
+                .verificationConfig(verificationMethodConfig)
+                .initiationListener(this)
+                .build()
+                .initiate();
+    }
+
+    @Override
+    public void onInitializationFailed(@NotNull Throwable throwable) {
+        logger.debug("Error while receiving response " + throwable.getLocalizedMessage());
+    }
+
+    @Override
+    public void onInitiated(@NotNull InitiationResponseData initiationResponseData) {
+        logger.debug("Response received id is " + initiationResponseData.getId());
+        initiatedVerificationId = initiationResponseData.getId();
     }
 
     /**

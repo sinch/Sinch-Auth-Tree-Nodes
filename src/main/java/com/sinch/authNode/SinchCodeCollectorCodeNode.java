@@ -14,6 +14,7 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.TextOutputCallback;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 @Node.Metadata(outcomeProvider = AbstractDecisionNode.OutcomeProvider.class,
@@ -39,7 +40,21 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
     @Override
     public Action process(TreeContext treeContext) throws NodeProcessException {
         logger.debug("Process called of SinchCodeCollectorCodeNode");
-        return collectCode(treeContext, config.hideCode());
+        String verificationCode = getVerificationCode(treeContext, config.isCodeHidden()).orElse(null);
+        //TODO Obtain the initiated verification ID.
+        if (verificationCode == null) {
+            return collectCode(treeContext, config.isCodeHidden());
+        } else {
+            return checkVerificationCode(verificationCode);
+        }
+    }
+
+    private Optional<String> getVerificationCode(TreeContext treeContext, boolean isCodeHiden) {
+        if (isCodeHiden) {
+            return treeContext.getCallback(PasswordCallback.class).map(PasswordCallback::getPassword).map(String::new);
+        } else {
+            return treeContext.getCallback(NameCallback.class).map(NameCallback::getName);
+        }
     }
 
     private Action collectCode(TreeContext treeContext, boolean isHidden) {
@@ -56,6 +71,10 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
         return Action.send(callbacks).build();
     }
 
+    private Action checkVerificationCode(String verificationCode) {
+        return goTo(true).build();
+    }
+
     /**
      * Configuration for the node.
      */
@@ -64,8 +83,8 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
         /**
          * Enable whether the one-time password should be a password.
          */
-        @Attribute(order = 100)
-        default boolean hideCode() {
+        @Attribute(order = 1)
+        default boolean isCodeHidden() {
             return true;
         }
 
