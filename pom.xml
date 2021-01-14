@@ -16,7 +16,8 @@
  * 
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -32,7 +33,7 @@
     <version>1.0.0-SNAPSHOT</version>
     <name>Template for an Auth Tree Node maven project</name>
     <description>An Authentication Tree Node for ForgeRock's Identity Platform</description>
-    
+
     <repositories>
 
         <repository>
@@ -54,15 +55,15 @@
         </repository>
 
     </repositories>
-
+    <!--    TODO What is really needed? -->
     <dependencies>
-    <dependency>
-        <groupId>org.forgerock.am</groupId>
-        <artifactId>auth-node-api</artifactId>
-        <scope>provided</scope>
-    </dependency>
         <dependency>
-            <groupId>com.sinch</groupId>
+            <groupId>org.forgerock.am</groupId>
+            <artifactId>auth-node-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sinch.jvm.sdk.verification</groupId>
             <artifactId>library</artifactId>
             <version>1.0.4</version>
         </dependency>
@@ -111,17 +112,17 @@
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
-
                         </goals>
 
                         <configuration>
                             <artifactSet>
                                 <includes>
-                                    <include>com.sinch:library</include>
+                                    <include>com.sinch.jvm.sdk.verification:library</include>
                                     <include>org.jetbrains.kotlin:kotlin-stdlib</include>
                                     <include>com.squareup.okhttp3:logging-interceptor</include>
                                     <include>com.squareup.okhttp3:okhttp</include>
-                                    <include>com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter</include>
+                                    <include>com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter
+                                    </include>
                                     <include>com.squareup.retrofit2:retrofit</include>
                                     <include>org.jetbrains.kotlinx:kotlinx-serialization-runtime</include>
                                     <include>com.squareup.okio:okio</include>

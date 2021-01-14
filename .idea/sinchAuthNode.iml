@@ -18,7 +18,7 @@
     <orderEntry type="library" name="Maven: org.forgerock.am:openam-audit-core:6.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.commons:forgerock-audit-core:23.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.commons:security:23.0.1" level="project" />
-    <orderEntry type="library" name="Maven: com.sinch:library:1.0.4" level="project" />
+    <orderEntry type="library" name="Maven: com.sinch.jvm.sdk.verification:library:1.0.4" level="project" />
     <orderEntry type="library" name="Maven: com.squareup.retrofit2:retrofit:2.8.1" level="project" />
     <orderEntry type="library" name="Maven: com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.5.0" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0" level="project" />

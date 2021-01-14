@@ -25,6 +25,7 @@ import com.sinch.verification.process.method.VerificationMethod;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
+import org.forgerock.openam.authentication.callbacks.PollingWaitCallback;
 import org.forgerock.openam.core.CoreWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,11 +60,12 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     @Inject
     public SinchAuthenticationNode(@Assisted Config config, CoreWrapper coreWrapper) throws NodeProcessException {
         this.config = config;
+        logger.debug("SinchAuthenticationNode initiated");
     }
 
     @Override
     public Action process(TreeContext context) {
-        logger.debug("Process function called");
+        logger.debug("Process function of SinchAuthenticationNode called");
         ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
         String userPhone = context.sharedState.get(USER_PHONE_KEY).asString();
         if (userPhone == null) {
@@ -77,6 +79,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 )).build();
             }
         }
+
         initiateVerification(config.appHash(), userPhone, config.verificationMethod());
         return goToNext()
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
