@@ -25,6 +25,7 @@ import com.sinch.verification.process.config.VerificationMethodConfig;
 import com.sinch.verification.process.listener.InitiationListener;
 import com.sinch.verification.process.method.VerificationMethod;
 import com.sun.identity.sm.RequiredValueValidator;
+import org.forgerock.json.JsonValue;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
 import org.forgerock.openam.authentication.callbacks.PollingWaitCallback;
@@ -71,13 +72,13 @@ public class SinchAuthenticationNode extends SingleOutcomeNode implements Initia
 
     @Override
     public Action process(TreeContext context) {
-        logger.debug("Process function of SinchAuthenticationNode called");
+        logger.debug("Process function of SinchAuthenticationNode called the verification id is " + context.sharedState.get(INITIATED_ID_KEY));
         ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
         String userPhone = context.sharedState.get(USER_PHONE_KEY).asString();
         if (userPhone == null) {
             if (context.hasCallbacks() && context.getCallback(NameCallback.class).isPresent()) {
                 userPhone = context.getCallback(NameCallback.class).get().getName();
-                initiateVerification(config.appHash(), userPhone, config.verificationMethod());
+                initiateVerification(context, config.appHash(), userPhone, config.verificationMethod());
                 logger.debug("User phone is " + userPhone);
                 return processInitiation(context, userPhone);
             } else {
@@ -107,7 +108,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode implements Initia
         }
     }
 
-    private void initiateVerification(String appHash, String phoneNumber, VerificationMethodType verificationMethod) {
+    private void initiateVerification(TreeContext context, String appHash, String phoneNumber, VerificationMethodType verificationMethod) {
         VerificationMethodConfig verificationMethodConfig = VerificationMethodConfig.Builder.getInstance()
                 .authorizationMethod(new AppKeyAuthorizationMethod(appHash))
                 .verificationMethod(verificationMethod)
@@ -116,7 +117,18 @@ public class SinchAuthenticationNode extends SingleOutcomeNode implements Initia
 
         VerificationMethod.Builder.getInstance()
                 .verificationConfig(verificationMethodConfig)
-                .initiationListener(this)
+                .initiationListener(new InitiationListener() {
+                    @Override
+                    public void onInitiated(@NotNull InitiationResponseData initiationResponseData) {
+                        context.sharedState.put(INITIATED_ID_KEY, initiationResponseData.getId());
+                        logger.debug("Id of the verification saved in shared state now it is "+context.sharedState.get(INITIATED_ID_KEY));
+                    }
+
+                    @Override
+                    public void onInitializationFailed(@NotNull Throwable throwable) {
+                        //TODO handle initiation error
+                    }
+                })
                 .build()
                 .initiate();
     }
