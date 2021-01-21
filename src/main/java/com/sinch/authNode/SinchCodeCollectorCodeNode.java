@@ -3,8 +3,15 @@ package com.sinch.authNode;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.sinch.verification.model.VerificationMethodType;
+import com.sinch.verification.model.verification.VerificationResponseData;
+import com.sinch.verification.model.verification.VerificationStatus;
+import com.sinch.verification.utils.VerificationCallUtils;
 import org.forgerock.openam.annotations.sm.Attribute;
-import org.forgerock.openam.auth.node.api.*;
+import org.forgerock.openam.auth.node.api.AbstractDecisionNode;
+import org.forgerock.openam.auth.node.api.Action;
+import org.forgerock.openam.auth.node.api.Node;
+import org.forgerock.openam.auth.node.api.TreeContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +28,8 @@ import java.util.ResourceBundle;
         configClass = SinchCodeCollectorCodeNode.Config.class)
 public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
 
+    static final String VERIFICATION_METHOD_KEY = "verMethodKey";
     private static final String BUNDLE = "com/sinch/authNode/SinchCodeCollectorCodeNode";
-
     private final Logger logger = LoggerFactory.getLogger(SinchCodeCollectorCodeNode.class);
     private final Config config;
 
@@ -38,14 +45,17 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
     }
 
     @Override
-    public Action process(TreeContext treeContext) throws NodeProcessException {
-        logger.debug("Process called of SinchCodeCollectorCodeNode");
+    public Action process(TreeContext treeContext) {
         String verificationCode = getVerificationCode(treeContext, config.isCodeHidden()).orElse(null);
-        //TODO Obtain the initiated verification ID.
+        String verificationId = treeContext.sharedState.get(SinchAuthenticationNode.INITIATED_ID_KEY).asString();
+        String appHash = treeContext.sharedState.get(SinchAuthenticationNode.APP_HASH_KEY).asString();
+        VerificationMethodType method = VerificationMethodType.valueOf(treeContext.sharedState.get(SinchAuthenticationNode.VER_METHOD_KEY).asString());
+        logger.debug("Process SinchCodeCollectorCodeNode called verificationId: " + verificationId +
+                " verification code: " + verificationCode + " appHash: " + appHash + " verification method: " + method);
         if (verificationCode == null) {
             return collectCode(treeContext, config.isCodeHidden());
         } else {
-            return checkVerificationCode(verificationCode);
+            return checkVerificationCode(appHash, verificationId, method, verificationCode);
         }
     }
 
@@ -71,8 +81,20 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
         return Action.send(callbacks).build();
     }
 
-    private Action checkVerificationCode(String verificationCode) {
-        return goTo(true).build();
+    private Action checkVerificationCode(String appHash, String verificationId, VerificationMethodType method, String verificationCode) {
+        boolean isVerifiedSuccessfully;
+        try {
+            VerificationResponseData verificationResponseData = VerificationCallUtils.verifySynchronicallyById(
+                    appHash,
+                    verificationId,
+                    verificationCode,
+                    method);
+            isVerifiedSuccessfully = verificationResponseData.getStatus() == VerificationStatus.SUCCESSFUL;
+        } catch (Exception e) {
+            logger.debug("Exception while checking verification code " + e.getLocalizedMessage());
+            isVerifiedSuccessfully = false;
+        }
+        return goTo(isVerifiedSuccessfully).build();
     }
 
     /**
