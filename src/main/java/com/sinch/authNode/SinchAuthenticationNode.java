@@ -20,16 +20,12 @@ package com.sinch.authNode;
 import com.google.inject.assistedinject.Assisted;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
-import com.sinch.verification.network.auth.AppKeyAuthorizationMethod;
-import com.sinch.verification.process.config.VerificationMethodConfig;
-import com.sinch.verification.process.listener.InitiationListener;
-import com.sinch.verification.process.method.VerificationMethod;
+import com.sinch.verification.utils.VerificationCallUtils;
+import com.sun.identity.idm.IdUtils;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
-import org.forgerock.openam.authentication.callbacks.PollingWaitCallback;
-import org.forgerock.openam.core.CoreWrapper;
-import org.jetbrains.annotations.NotNull;
+import org.forgerock.openam.core.realms.Realm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,41 +41,43 @@ import java.util.ResourceBundle;
  */
 @Node.Metadata(outcomeProvider = SingleOutcomeNode.OutcomeProvider.class,
         configClass = SinchAuthenticationNode.Config.class)
-public class SinchAuthenticationNode extends SingleOutcomeNode implements InitiationListener {
+public class SinchAuthenticationNode extends SingleOutcomeNode {
+
+    static final String PROFILE_PHONE_KEY = "telephoneNumber";
+    static final String USERNAME_KEY = "username";
 
     static final String USER_PHONE_KEY = "phoneNumber";
     static final String INITIATED_ID_KEY = "initiatedId";
+    static final String APP_HASH_KEY = "appHash";
+    static final String VER_METHOD_KEY = "verMethodKey";
 
     private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
 
     private final Logger logger = LoggerFactory.getLogger(SinchAuthenticationNode.class);
     private final Config config;
-
-    private String initiatedVerificationId = null;
+    private final Realm realm;
 
     /**
      * Create the node.
      *
      * @param config The service config.
-     * @throws NodeProcessException If the configuration was not valid.
+     * @param realm The realm of the node.
      */
     @Inject
-    public SinchAuthenticationNode(@Assisted Config config, CoreWrapper coreWrapper) throws NodeProcessException {
+    public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm) {
         this.config = config;
-        logger.debug("SinchAuthenticationNode initiated");
+        this.realm = realm;
     }
 
     @Override
     public Action process(TreeContext context) {
-        logger.debug("Process function of SinchAuthenticationNode called");
+        logger.debug("Process function of SinchAuthenticationNode called with sharedState " + context.sharedState);
         ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
-        String userPhone = context.sharedState.get(USER_PHONE_KEY).asString();
-        if (userPhone == null) {
+        String phoneNumber = readProfilePhoneNumber(context.sharedState.get(USERNAME_KEY).asString());
+        if (phoneNumber == null) {
             if (context.hasCallbacks() && context.getCallback(NameCallback.class).isPresent()) {
-                userPhone = context.getCallback(NameCallback.class).get().getName();
-                initiateVerification(config.appHash(), userPhone, config.verificationMethod());
-                logger.debug("User phone is " + userPhone);
-                return processInitiation(context, userPhone);
+                phoneNumber = context.getCallback(NameCallback.class).get().getName();
+                return processInitiation(context, phoneNumber);
             } else {
                 return Action.send(Arrays.asList(
                         new TextOutputCallback(TextOutputCallback.INFORMATION, bundle.getString("callback.phoneNumberText")),
@@ -87,49 +85,40 @@ public class SinchAuthenticationNode extends SingleOutcomeNode implements Initia
                 )).build();
             }
         }
-        return processInitiation(context, userPhone);
+        return processInitiation(context, phoneNumber);
     }
 
     private Action processInitiation(TreeContext context, String userPhone) {
-        if (initiatedVerificationId != null) {
-            logger.debug("Initiated verification id is " + initiatedVerificationId);
-            return goToNext()
-                    .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, initiatedVerificationId))
-                    .build();
-        } else {
-            logger.debug("Waiting for initiation response");
-            return Action.send(
-                    new PollingWaitCallback.PollingWaitCallbackBuilder()
-                            .withWaitTime(String.valueOf(1000))
-                            .build())
-                    .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
-                    .build();
+        String verificationId = initiateVerification(config.appHash(), formatPhoneNumber(userPhone), config.verificationMethod()).getId();
+        logger.debug("Verification initiated with id " + verificationId);
+        return goToNext()
+                .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
+                .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
+                .replaceSharedState(context.sharedState.put(SinchCodeCollectorCodeNode.VERIFICATION_METHOD_KEY, config.verificationMethod()))
+                .replaceSharedState(context.sharedState.put(APP_HASH_KEY, config.appHash()))
+                .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, config.verificationMethod().toString()))
+                .build();
+    }
+
+    private InitiationResponseData initiateVerification(String appHash, String phoneNumber, VerificationMethodType verificationMethod) {
+        return VerificationCallUtils.initiateSynchronically(
+                appHash,
+                verificationMethod,
+                phoneNumber
+        );
+    }
+
+    private String readProfilePhoneNumber(String username) {
+        try {
+            return String.valueOf(IdUtils.getIdentity(username, realm).getAttributes().get(PROFILE_PHONE_KEY));
+        } catch (Exception e) {
+            logger.debug("Exception while getting user phone number from profile " + e.getLocalizedMessage());
+            return null;
         }
     }
 
-    private void initiateVerification(String appHash, String phoneNumber, VerificationMethodType verificationMethod) {
-        VerificationMethodConfig verificationMethodConfig = VerificationMethodConfig.Builder.getInstance()
-                .authorizationMethod(new AppKeyAuthorizationMethod(appHash))
-                .verificationMethod(verificationMethod)
-                .number(phoneNumber)
-                .build();
-
-        VerificationMethod.Builder.getInstance()
-                .verificationConfig(verificationMethodConfig)
-                .initiationListener(this)
-                .build()
-                .initiate();
-    }
-
-    @Override
-    public void onInitializationFailed(@NotNull Throwable throwable) {
-        logger.debug("Error while receiving response " + throwable.getLocalizedMessage());
-    }
-
-    @Override
-    public void onInitiated(@NotNull InitiationResponseData initiationResponseData) {
-        logger.debug("Response received id is " + initiationResponseData.getId());
-        initiatedVerificationId = initiationResponseData.getId();
+    private String formatPhoneNumber(String unformatted) {
+        return "+" + unformatted.replaceAll("[\\D]", "");
     }
 
     /**

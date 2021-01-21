@@ -12,6 +12,11 @@
       <option name="url" value="https://kotlin.bintray.com/kotlinx" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="shibboleth" />
+      <option name="name" value="Shibboleth - for OpenSAML" />
+      <option name="url" value="https://build.shibboleth.net/nexus/content/repositories/releases" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="forgerock-private-releases" />
       <option name="name" value="forgerock-private-releases" />
       <option name="url" value="https://maven.forgerock.org:443/repo/private-releases" />
@@ -22,6 +27,31 @@
       <option name="url" value="https://repo1.maven.org/maven2" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="maven.forgerock.org" />
+      <option name="name" value="maven.forgerock.org-openam-dependencies" />
+      <option name="url" value="https://maven.forgerock.org/repo/openam-dependencies" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="oracle-repository" />
+      <option name="name" value="Oracle Repository" />
+      <option name="url" value="http://download.oracle.com/maven" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="forgerock-internal-releases" />
+      <option name="name" value="ForgeRock Internal Releases Repository" />
+      <option name="url" value="https://maven.forgerock.org/repo/internal-releases" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="forgerock-internal-snapshots" />
+      <option name="name" value="ForgeRock Internal Snapshots Repository" />
+      <option name="url" value="https://maven.forgerock.org/repo/internal-snapshots" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jenkins-repo" />
+      <option name="name" value="Jenkins central repository" />
+      <option name="url" value="https://repo.jenkins-ci.org/releases" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="jboss.community" />
       <option name="name" value="JBoss Community repository" />
       <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
@@ -30,6 +60,11 @@
       <option name="id" value="bintray-sinch-com.sinch.jvm.sdk.verification" />
       <option name="name" value="bintray" />
       <option name="url" value="https://sinch.bintray.com/com.sinch.jvm.sdk.verification" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="restlet-cache" />
+      <option name="name" value="Restlet Cache Repository" />
+      <option name="url" value="https://maven.forgerock.org/repo/maven.restlet.org" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="forgerock-private-snapshots" />
