@@ -10,9 +10,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.forgerock.am:auth-node-api:6.0.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.forgerock.am:auth-node-api:7.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.commons:forgerock-util:23.0.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.forgerock.commons.guava:forgerock-guava-all:18.0.4" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.am:openam-plugin-framework:6.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.servicemix.bundles:org.apache.servicemix.bundles.javax-inject:1_2" level="project" />
     <orderEntry type="library" name="Maven: org.forgerock.am:openam-audit-core:6.0.0" level="project" />

@@ -27,6 +27,12 @@
         <version>6.0.0</version>
     </parent>
 
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <artifactId>sinchAuthNode</artifactId>
 
     <groupId>com.sinch</groupId>
@@ -60,6 +66,7 @@
         <dependency>
             <groupId>org.forgerock.am</groupId>
             <artifactId>auth-node-api</artifactId>
+            <version>7.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

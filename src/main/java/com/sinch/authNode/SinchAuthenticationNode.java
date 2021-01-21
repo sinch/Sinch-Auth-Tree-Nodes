@@ -44,11 +44,11 @@ import java.util.ResourceBundle;
 public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     static final String PROFILE_PHONE_KEY = "telephoneNumber";
-    static final String USERNAME_KEY = "username";
+    static final String PROFILE_USERNAME_KEY = "username";
 
-    static final String USER_PHONE_KEY = "phoneNumber";
-    static final String INITIATED_ID_KEY = "initiatedId";
-    static final String APP_HASH_KEY = "appHash";
+    static final String USER_PHONE_KEY = "phoneNumberKey";
+    static final String INITIATED_ID_KEY = "initiatedIdKey";
+    static final String APP_HASH_KEY = "appHashKey";
     static final String VER_METHOD_KEY = "verMethodKey";
 
     private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
@@ -61,7 +61,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
      * Create the node.
      *
      * @param config The service config.
-     * @param realm The realm of the node.
+     * @param realm  The realm of the node.
      */
     @Inject
     public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm) {
@@ -71,9 +71,8 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     @Override
     public Action process(TreeContext context) {
-        logger.debug("Process function of SinchAuthenticationNode called with sharedState " + context.sharedState);
         ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
-        String phoneNumber = readProfilePhoneNumber(context.sharedState.get(USERNAME_KEY).asString());
+        String phoneNumber = readProfilePhoneNumber(context.sharedState.get(PROFILE_USERNAME_KEY).asString());
         if (phoneNumber == null) {
             if (context.hasCallbacks() && context.getCallback(NameCallback.class).isPresent()) {
                 phoneNumber = context.getCallback(NameCallback.class).get().getName();
@@ -88,15 +87,19 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         return processInitiation(context, phoneNumber);
     }
 
+    @Override
+    public OutputState[] getOutputs() {
+        return new OutputState[]{new OutputState(APP_HASH_KEY)};
+    }
+
     private Action processInitiation(TreeContext context, String userPhone) {
         String verificationId = initiateVerification(config.appHash(), formatPhoneNumber(userPhone), config.verificationMethod()).getId();
         logger.debug("Verification initiated with id " + verificationId);
         return goToNext()
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
-                .replaceSharedState(context.sharedState.put(SinchCodeCollectorCodeNode.VERIFICATION_METHOD_KEY, config.verificationMethod()))
-                .replaceSharedState(context.sharedState.put(APP_HASH_KEY, config.appHash()))
                 .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, config.verificationMethod().toString()))
+                .replaceTransientState(context.transientState.put(APP_HASH_KEY, config.appHash()))
                 .build();
     }
 
