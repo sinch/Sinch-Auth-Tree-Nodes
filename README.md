@@ -15,20 +15,34 @@
 -->
 # sinchAuthNode
 
-A simple authentication node for ForgeRock's [Identity Platform][forgerock_platform] 5.5 and above. This node... **SHORT DESCRIPTION HERE**
+A simple authentication node for ForgeRock's [Identity Platform][forgerock_platform] 5.5 and above. This node integrates Sinch phone number verification service with AM.
+Currently plugin supports verifications via SMS, flashcalls and callouts.
 
-
-Copy the .jar file from the ../target directory into the ../web-container/webapps/openam/WEB-INF/lib directory where AM is deployed.  Restart the web container to pick up the new node.  The node will then appear in the authentication trees components palette.
-
-
-**USAGE HERE**
-
+##Usage
+Copy the .jar file from the releases tab of Github into the ../web-container/webapps/openam/WEB-INF/lib directory where AM is deployed.  Restart the web container to pick up the new node.  The node will then appear in the authentication trees components palette.
 
 The code in this repository has binary dependencies that live in the ForgeRock maven repository. Maven can be configured to authenticate to this repository by following the following [ForgeRock Knowledge Base Article](https://backstage.forgerock.com/knowledge/kb/article/a74096897).
 
-**SPECIFIC BUILD INSTRUCTIONS HERE**
+###SinchAuthenticationNode
 
-**SCREENSHOTS ARE GOOD LIKE BELOW**
+This node initiates the verification process. By the default it looks into `telephoneNumber` value of user's profile (username is aquired by checking the `username` field of shared state).
+If no phone number is present node asks presents the user a page where the number can be typed and used for verification later.
+Properties of the node:
+
+* **appHash** - Application Hash for your application found in the Sinch Verification Portal dashboard.
+* **verificationMethod** - Verification method used to verify the phone number.
+
+###SinchCodeCollectorNode
+
+This node prompts the user to enter the verification code that depending on the chosen verification method is:
+
+* **SMS** - 4 Digits number received in text message.
+* **Flashcall** - Full number of the incoming call. (formatted according to [E.164](http://en.wikipedia.org/wiki/E.164) specification and prefixed with `+`).
+* **Callout** - The code is spoken by text-to-speech software after picking up the incoming phone call.
+
+###Example flow
+
+The example flow presents a login page where user enters his credentials, then if present it validates the number taken from the profile or asks the user to enter it manually.
 
 ![ScreenShot](./example.png)
 
