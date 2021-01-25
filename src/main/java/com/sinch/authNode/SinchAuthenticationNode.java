@@ -43,8 +43,8 @@ import java.util.ResourceBundle;
         configClass = SinchAuthenticationNode.Config.class)
 public class SinchAuthenticationNode extends SingleOutcomeNode {
 
-    static final String PROFILE_PHONE_KEY = "telephoneNumber";
-    static final String PROFILE_USERNAME_KEY = "username";
+    static final String IDENTITY_USERNAME_KEY = "username";
+    static final String DEFAULT_IDENTITY_PHONE_ATTRIBUTE = "telephoneNumber";
 
     static final String USER_PHONE_KEY = "phoneNumberKey";
     static final String INITIATED_ID_KEY = "initiatedIdKey";
@@ -72,7 +72,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     @Override
     public Action process(TreeContext context) {
         ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
-        String phoneNumber = readProfilePhoneNumber(context.sharedState.get(PROFILE_USERNAME_KEY).asString());
+        String phoneNumber = readProfilePhoneNumber(context.sharedState.get(IDENTITY_USERNAME_KEY).asString());
         if (phoneNumber == null) {
             if (context.hasCallbacks() && context.getCallback(NameCallback.class).isPresent()) {
                 phoneNumber = context.getCallback(NameCallback.class).get().getName();
@@ -113,7 +113,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     private String readProfilePhoneNumber(String username) {
         try {
-            return String.valueOf(IdUtils.getIdentity(username, realm).getAttributes().get(PROFILE_PHONE_KEY));
+            return String.valueOf(IdUtils.getIdentity(username, realm).getAttributes().get(config.identityPhoneNumberAttribute()));
         } catch (Exception e) {
             logger.debug("Exception while getting user phone number from profile " + e.getLocalizedMessage());
             return null;
@@ -136,6 +136,11 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         @Attribute(order = 2, validators = {RequiredValueValidator.class})
         default VerificationMethodType verificationMethod() {
             return VerificationMethodType.SMS;
+        }
+
+        @Attribute(order = 3)
+        default String identityPhoneNumberAttribute() {
+            return DEFAULT_IDENTITY_PHONE_ATTRIBUTE;
         }
     }
 

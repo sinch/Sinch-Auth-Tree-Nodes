@@ -25,12 +25,13 @@ The code in this repository has binary dependencies that live in the ForgeRock m
 
 ###SinchAuthenticationNode
 
-This node initiates the verification process. By the default it looks into `telephoneNumber` value of user's profile (username is aquired by checking the `username` field of shared state).
+This node initiates the verification process. By the default it looks into `identityPhoneNumberAttribute` passed as a configuration option (username is aquired by checking the `username` field of shared state).
 If no phone number is present node asks presents the user a page where the number can be typed and used for verification later.
 Properties of the node:
 
 * **appHash** - Application Hash for your application found in the Sinch Verification Portal dashboard.
 * **verificationMethod** - Verification method used to verify the phone number.
+* **identityPhoneNumberAttribute** - Attribute used to get user's phone number from identities store.
 
 ###SinchCodeCollectorNode
 
