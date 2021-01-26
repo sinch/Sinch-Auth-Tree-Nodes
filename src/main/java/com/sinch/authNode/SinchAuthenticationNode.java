@@ -21,10 +21,10 @@ import com.google.inject.assistedinject.Assisted;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
 import com.sinch.verification.utils.VerificationCallUtils;
-import com.sun.identity.idm.IdUtils;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
+import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.core.realms.Realm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +56,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     private final Logger logger = LoggerFactory.getLogger(SinchAuthenticationNode.class);
     private final Config config;
     private final Realm realm;
+    private final CoreWrapper coreWrapper;
 
     /**
      * Create the node.
@@ -64,9 +65,10 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
      * @param realm  The realm of the node.
      */
     @Inject
-    public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm) {
+    public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm, CoreWrapper coreWrapper) {
         this.config = config;
         this.realm = realm;
+        this.coreWrapper = coreWrapper;
     }
 
     @Override
@@ -113,7 +115,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     private String readProfilePhoneNumber(String username) {
         try {
-            return String.valueOf(IdUtils.getIdentity(username, realm).getAttributes().get(config.identityPhoneNumberAttribute()));
+            return String.valueOf(coreWrapper.getIdentity(username, realm).getAttributes().get(config.identityPhoneNumberAttribute()));
         } catch (Exception e) {
             logger.debug("Exception while getting user phone number from profile " + e.getLocalizedMessage());
             return null;

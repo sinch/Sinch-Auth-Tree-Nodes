@@ -7,6 +7,11 @@
       <option name="url" value="https://repo.maven.apache.org/maven2" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="forgerock-build-dependencies" />
+      <option name="name" value="ForgeRock Private Release Repository for AM 7.0.0" />
+      <option name="url" value="https://maven.forgerock.org/repo/forgerock-openam-7.0.0-dependencies" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="bintray-kotlin-kotlinx" />
       <option name="name" value="bintray" />
       <option name="url" value="https://kotlin.bintray.com/kotlinx" />
