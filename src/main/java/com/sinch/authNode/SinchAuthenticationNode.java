@@ -18,9 +18,9 @@
 package com.sinch.authNode;
 
 import com.google.inject.assistedinject.Assisted;
+import com.sinch.authNode.service.SinchApiService;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
-import com.sinch.verification.utils.VerificationCallUtils;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
@@ -57,6 +57,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     private final Config config;
     private final Realm realm;
     private final CoreWrapper coreWrapper;
+    private final SinchApiService sinchApiService;
 
     /**
      * Create the node.
@@ -65,10 +66,11 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
      * @param realm  The realm of the node.
      */
     @Inject
-    public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm, CoreWrapper coreWrapper) {
+    public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm, CoreWrapper coreWrapper, SinchApiService sinchApiService) {
         this.config = config;
         this.realm = realm;
         this.coreWrapper = coreWrapper;
+        this.sinchApiService = sinchApiService;
     }
 
     @Override
@@ -106,7 +108,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     }
 
     private InitiationResponseData initiateVerification(String appHash, String phoneNumber, VerificationMethodType verificationMethod) {
-        return VerificationCallUtils.initiateSynchronically(
+        return sinchApiService.initiateSynchronically(
                 appHash,
                 verificationMethod,
                 phoneNumber
