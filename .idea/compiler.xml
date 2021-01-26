@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="sinchAuthNode" target="1.8" />
+      <module name="sinchAuthNode" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
