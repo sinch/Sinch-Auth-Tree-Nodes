@@ -3,10 +3,10 @@ package com.sinch.authNode;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.sinch.authNode.service.SinchApiService;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.verification.VerificationResponseData;
 import com.sinch.verification.model.verification.VerificationStatus;
-import com.sinch.verification.utils.VerificationCallUtils;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
 import org.slf4j.Logger;
@@ -32,16 +32,19 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
 
     private final Logger logger = LoggerFactory.getLogger(SinchCodeCollectorCodeNode.class);
     private final Config config;
+    private final SinchApiService sinchApiService;
 
     /**
      * Create the node using Guice injection. Just-in-time bindings can be used to obtain instances of other classes
      * from the plugin.
      *
-     * @param config The service config.
+     * @param config          The service config.
+     * @param sinchApiService Sinch Api Service used to execute rest calls
      */
     @Inject
-    public SinchCodeCollectorCodeNode(@Assisted Config config) {
+    public SinchCodeCollectorCodeNode(@Assisted Config config, SinchApiService sinchApiService) {
         this.config = config;
+        this.sinchApiService = sinchApiService;
     }
 
     @Override
@@ -89,7 +92,7 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
     private Action executeCodeVerificationCheck(String appHash, String verificationId, VerificationMethodType method, String verificationCode) {
         boolean isVerifiedSuccessfully;
         try {
-            VerificationResponseData verificationResponseData = VerificationCallUtils.verifySynchronicallyById(
+            VerificationResponseData verificationResponseData = sinchApiService.verifySynchronicallyById(
                     appHash,
                     verificationId,
                     verificationCode,
