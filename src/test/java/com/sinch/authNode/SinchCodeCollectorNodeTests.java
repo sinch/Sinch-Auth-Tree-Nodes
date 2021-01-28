@@ -1,6 +1,8 @@
 package com.sinch.authNode;
 
 import com.sinch.authNode.service.SinchApiService;
+import com.sinch.verification.model.verification.VerificationResponseData;
+import com.sinch.verification.model.verification.VerificationStatus;
 import org.forgerock.json.JsonValue;
 import org.forgerock.openam.auth.node.api.Action;
 import org.forgerock.openam.auth.node.api.ExternalRequestContext;
@@ -12,14 +14,19 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.TextOutputCallback;
 import java.util.List;
 import java.util.Optional;
 
 import static com.sinch.authNode.TestConstants.*;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.forgerock.json.JsonValue.*;
 import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
+import static org.mockito.ArgumentMatchers.any;
 
 public class SinchCodeCollectorNodeTests {
 
@@ -62,6 +69,59 @@ public class SinchCodeCollectorNodeTests {
         Assertions.assertEquals(2, callbacks.size());
         Assertions.assertEquals(TextOutputCallback.class, callbacks.get(0).getClass());
         Assertions.assertEquals(NameCallback.class, callbacks.get(1).getClass());
+    }
+
+    @Test
+    public void testProcessWhenCodePassedAsPassword() {
+        Mockito.when(config.isCodeHidden()).thenReturn(true);
+        PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
+        passwordCallback.setPassword(FAKE_CODE.toCharArray());
+
+        context = new TreeContext(retrieveSharedState(), retrieveTransientState(),
+                new ExternalRequestContext.Builder().build(), singletonList(passwordCallback), Optional.of("mockUserId"));
+        mockVerifyCall(true);
+
+        Action result = sinchCodeCollectorCodeNode.process(context);
+
+        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_HASH, FAKE_ID, FAKE_CODE, FAKE_METHOD);
+        Assertions.assertEquals("true", result.outcome);
+    }
+
+    @Test
+    public void testProcessWhenCodePassedAsNameCallback() {
+        Mockito.when(config.isCodeHidden()).thenReturn(false);
+        NameCallback nameCallback = new NameCallback("prompt", "dn");
+        nameCallback.setName(FAKE_CODE);
+
+        context = new TreeContext(retrieveSharedState(), retrieveTransientState(),
+                new ExternalRequestContext.Builder().build(), singletonList(nameCallback), Optional.of("mockUserId"));
+        mockVerifyCall(true);
+
+        Action result = sinchCodeCollectorCodeNode.process(context);
+
+        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_HASH, FAKE_ID, FAKE_CODE, FAKE_METHOD);
+        Assertions.assertEquals("true", result.outcome);
+    }
+
+    @Test
+    public void testProcessWithWrongCode() {
+        Mockito.when(config.isCodeHidden()).thenReturn(true);
+        PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
+        passwordCallback.setPassword(FAKE_CODE.toCharArray());
+
+        context = new TreeContext(retrieveSharedState(), retrieveTransientState(),
+                new ExternalRequestContext.Builder().build(), singletonList(passwordCallback), Optional.of("mockUserId"));
+        Action result = sinchCodeCollectorCodeNode.process(context);
+
+        mockVerifyCall(false);
+        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_HASH, FAKE_ID, FAKE_CODE, FAKE_METHOD);
+        Assertions.assertEquals("false", result.outcome);
+    }
+
+    private void mockVerifyCall(boolean isSuccess) {
+        Mockito.when(sinchApiService.verifySynchronicallyById(any(), any(), any(), any())).thenReturn(new VerificationResponseData(
+                FAKE_ID, isSuccess ? VerificationStatus.SUCCESSFUL : VerificationStatus.ERROR, FAKE_METHOD, null, null
+        ));
     }
 
     private JsonValue retrieveSharedState() {
