@@ -18,12 +18,12 @@
 A simple authentication node for ForgeRock's [Identity Platform][forgerock_platform] 5.5 and above. This node integrates Sinch phone number verification service with AM.
 Currently plugin supports verifications via SMS, flashcalls and callouts.
 
-##Usage
+## Usage
 Copy the .jar file from the releases tab of Github into the ../web-container/webapps/openam/WEB-INF/lib directory where AM is deployed.  Restart the web container to pick up the new node.  The node will then appear in the authentication trees components palette.
 
 The code in this repository has binary dependencies that live in the ForgeRock maven repository. Maven can be configured to authenticate to this repository by following the following [ForgeRock Knowledge Base Article](https://backstage.forgerock.com/knowledge/kb/article/a74096897).
 
-###SinchAuthenticationNode
+### SinchAuthenticationNode
 
 This node initiates the verification process. By the default it looks into `identityPhoneNumberAttribute` passed as a configuration option (username is aquired by checking the `username` field of shared state).
 If no phone number is present node asks presents the user a page where the number can be typed and used for verification later.
@@ -33,7 +33,7 @@ Properties of the node:
 * **verificationMethod** - Verification method used to verify the phone number.
 * **identityPhoneNumberAttribute** - Attribute used to get user's phone number from identities store.
 
-###SinchCodeCollectorNode
+### SinchCodeCollectorNode
 
 This node prompts the user to enter the verification code that depending on the chosen verification method is:
 
