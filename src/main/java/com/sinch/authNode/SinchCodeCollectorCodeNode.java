@@ -24,6 +24,9 @@ import java.util.ResourceBundle;
 import static com.sinch.authNode.SinchAuthenticationNode.APP_HASH_KEY;
 import static com.sinch.authNode.SinchAuthenticationNode.VER_METHOD_KEY;
 
+/**
+ * A node that performs actual verification code check against Sinch backend.
+ */
 @Node.Metadata(outcomeProvider = AbstractDecisionNode.OutcomeProvider.class,
         configClass = SinchCodeCollectorCodeNode.Config.class)
 public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
@@ -35,11 +38,10 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
     private final SinchApiService sinchApiService;
 
     /**
-     * Create the node using Guice injection. Just-in-time bindings can be used to obtain instances of other classes
-     * from the plugin.
+     * Create the node using Guice injection.
      *
      * @param config          The service config.
-     * @param sinchApiService Sinch Api Service used to execute rest calls
+     * @param sinchApiService Service responsible for communication with Sinch Rest API Service.
      */
     @Inject
     public SinchCodeCollectorCodeNode(@Assisted Config config, SinchApiService sinchApiService) {
