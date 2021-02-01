@@ -41,7 +41,7 @@ This node prompts the user to enter the verification code that depending on the 
 * **Flashcall** - Full number of the incoming call. (formatted according to [E.164](http://en.wikipedia.org/wiki/E.164) specification and prefixed with `+`).
 * **Callout** - The code is spoken by text-to-speech software after picking up the incoming phone call.
 
-###Example flow
+### Example flow
 
 The example flow presents a login page where user enters his credentials, then if present it validates the number taken from the profile or asks the user to enter it manually.
 
