@@ -11,6 +11,7 @@ import com.sun.identity.idm.IdRepoException;
 import org.forgerock.json.JsonValue;
 import org.forgerock.openam.auth.node.api.Action;
 import org.forgerock.openam.auth.node.api.ExternalRequestContext;
+import org.forgerock.openam.auth.node.api.NodeProcessException;
 import org.forgerock.openam.auth.node.api.TreeContext;
 import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.core.realms.Realm;
@@ -71,7 +72,7 @@ public class SinchAuthenticationNodeTests {
     }
 
     @Test
-    public void testProcessActionWhenNoUserPhoneInProfile() {
+    public void testProcessActionWhenNoUserPhoneInProfile() throws NodeProcessException {
         Action result = sinchAuthenticationNode.process(context);
         Assertions.assertEquals(2, result.callbacks.size());
         Callback prompt = result.callbacks.get(0);
@@ -81,7 +82,7 @@ public class SinchAuthenticationNodeTests {
     }
 
     @Test
-    public void testProcessWhenPhoneNumberInProfile() throws IdRepoException, SSOException {
+    public void testProcessWhenPhoneNumberInProfile() throws IdRepoException, SSOException, NodeProcessException {
         injectDefaultConfig();
         mockSuccessfulRestApiCall();
         Map attributeMap = ImmutableMap.of(config.identityPhoneNumberAttribute(), FAKE_NUM);
@@ -95,7 +96,7 @@ public class SinchAuthenticationNodeTests {
     }
 
     @Test
-    public void testProcessWhenNumberInCallback() {
+    public void testProcessWhenNumberInCallback() throws NodeProcessException {
         injectDefaultConfig();
         mockSuccessfulRestApiCall();
         NameCallback phoneNumberCallback = new NameCallback("ignored");
@@ -113,6 +114,18 @@ public class SinchAuthenticationNodeTests {
         verifyOutcomeSharedState(result);
     }
 
+    @Test
+    public void testProcessFailureWhenExceptionWhileMakingCallToSinchApi() throws IdRepoException, SSOException, NodeProcessException {
+        injectDefaultConfig();
+        mockExceptionWhileMakingRestCall();
+        Map attributeMap = ImmutableMap.of(config.identityPhoneNumberAttribute(), FAKE_NUM);
+        Mockito.when(mockUser.getAttributes()).thenReturn(attributeMap);
+        Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
+        Assertions.assertThrows(NodeProcessException.class, () -> {
+            sinchAuthenticationNode.process(context);
+        });
+    }
+
     private void injectDefaultConfig() {
         Mockito.when(config.identityPhoneNumberAttribute()).thenReturn("telephoneNumber");
         Mockito.when(config.appHash()).thenReturn(FAKE_APP_HASH);
@@ -125,6 +138,13 @@ public class SinchAuthenticationNodeTests {
                         new InitiationResponseData(FAKE_ID, new AutoInitializationResponseDetails(FAKE_ID, emptyList()), null,
                                 null, null, null, VerificationMethodType.SMS, null)
                 );
+    }
+
+    private void mockExceptionWhileMakingRestCall() {
+        Mockito.when(sinchApiService.initiateSynchronically(anyString(), any(), anyString()))
+                .thenAnswer(ignored -> {
+                    throw new Exception();
+                });
     }
 
     private void verifyOutcomeSharedState(Action action) {

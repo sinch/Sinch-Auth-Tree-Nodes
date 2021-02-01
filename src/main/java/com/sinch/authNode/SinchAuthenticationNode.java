@@ -36,8 +36,7 @@ import java.util.Arrays;
 import java.util.ResourceBundle;
 
 /**
- * A node that checks to see if zero-page login headers have specified username and shared key
- * for this request.
+ * A node that initiates the verification process for given phone number against Sinch backend.
  */
 @Node.Metadata(outcomeProvider = SingleOutcomeNode.OutcomeProvider.class,
         configClass = SinchAuthenticationNode.Config.class)
@@ -64,6 +63,8 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
      *
      * @param config The service config.
      * @param realm  The realm of the node.
+     * @param coreWrapper The coreWrapper instance
+     * @param sinchApiService Service responsible for communication with Sinch Rest API Service.
      */
     @Inject
     public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm, CoreWrapper coreWrapper, SinchApiService sinchApiService) {
@@ -74,7 +75,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     }
 
     @Override
-    public Action process(TreeContext context) {
+    public Action process(TreeContext context) throws NodeProcessException {
         ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
         String phoneNumber = readProfilePhoneNumber(context.sharedState.get(IDENTITY_USERNAME_KEY).asString());
         if (phoneNumber == null) {
@@ -96,8 +97,14 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         return new OutputState[]{new OutputState(APP_HASH_KEY)};
     }
 
-    private Action processInitiation(TreeContext context, String userPhone) {
-        String verificationId = initiateVerification(config.appHash(), formatPhoneNumber(userPhone), config.verificationMethod()).getId();
+    private Action processInitiation(TreeContext context, String userPhone) throws NodeProcessException {
+        String verificationId;
+        try {
+            verificationId = initiateVerification(config.appHash(), formatPhoneNumber(userPhone), config.verificationMethod()).getId();
+        } catch (Exception e) {
+            logger.debug("Exception while initiating the verification process " + e.getLocalizedMessage());
+            throw new NodeProcessException("Unable to initiate the verification process", e);
+        }
         logger.debug("Verification initiated with id " + verificationId);
         return goToNext()
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
@@ -132,16 +139,26 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
      * Configuration for the node.
      */
     public interface Config {
+
+        /**
+         * Application hash copied from Sinch portal.
+         */
         @Attribute(order = 1, validators = {RequiredValueValidator.class})
         default String appHash() {
             return "";
         }
 
+        /**
+         * Verification method used to verify user's phone number.
+         */
         @Attribute(order = 2, validators = {RequiredValueValidator.class})
         default VerificationMethodType verificationMethod() {
             return VerificationMethodType.SMS;
         }
 
+        /**
+         * Attribute used to get user's phone number from identities store.
+         */
         @Attribute(order = 3)
         default String identityPhoneNumberAttribute() {
             return DEFAULT_IDENTITY_PHONE_ATTRIBUTE;
