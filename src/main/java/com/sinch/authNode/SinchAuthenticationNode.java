@@ -59,11 +59,11 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     private final SinchApiService sinchApiService;
 
     /**
-     * Create the node.
+     * Creates the node.
      *
-     * @param config The service config.
-     * @param realm  The realm of the node.
-     * @param coreWrapper The coreWrapper instance
+     * @param config          The service config.
+     * @param realm           The realm of the node.
+     * @param coreWrapper     The coreWrapper instance
      * @param sinchApiService Service responsible for communication with Sinch Rest API Service.
      */
     @Inject
@@ -99,8 +99,9 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     private Action processInitiation(TreeContext context, String userPhone) throws NodeProcessException {
         String verificationId;
+        VerificationMethodType verificationMethod = config.verificationMethod().asSinchMethodType();
         try {
-            verificationId = initiateVerification(config.appHash(), formatPhoneNumber(userPhone), config.verificationMethod()).getId();
+            verificationId = initiateVerification(config.appHash(), formatPhoneNumber(userPhone), verificationMethod).getId();
         } catch (Exception e) {
             logger.debug("Exception while initiating the verification process " + e.getLocalizedMessage());
             throw new NodeProcessException("Unable to initiate the verification process", e);
@@ -109,7 +110,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         return goToNext()
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
-                .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, config.verificationMethod().toString()))
+                .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, verificationMethod.toString()))
                 .replaceTransientState(context.transientState.put(APP_HASH_KEY, config.appHash()))
                 .build();
     }
@@ -152,8 +153,8 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
          * Verification method used to verify user's phone number.
          */
         @Attribute(order = 2, validators = {RequiredValueValidator.class})
-        default VerificationMethodType verificationMethod() {
-            return VerificationMethodType.SMS;
+        default AMSupportedVerificationMethod verificationMethod() {
+            return AMSupportedVerificationMethod.SMS;
         }
 
         /**

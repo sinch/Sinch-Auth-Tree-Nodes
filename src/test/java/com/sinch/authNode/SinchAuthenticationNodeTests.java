@@ -61,9 +61,8 @@ public class SinchAuthenticationNodeTests {
 
     @BeforeEach
     public void setup() throws Exception {
-        context = new TreeContext(retrieveSharedState(), json(object()),
-                new ExternalRequestContext.Builder().build(), emptyList(), Optional.of("mockUserId"));
         MockitoAnnotations.openMocks(this).close();
+        context = buildThreeContext(emptyList());
         sinchAuthenticationNode = new SinchAuthenticationNode(config, realm, coreWrapper, sinchApiService);
     }
 
@@ -115,15 +114,41 @@ public class SinchAuthenticationNodeTests {
     }
 
     @Test
-    public void testProcessFailureWhenExceptionWhileMakingCallToSinchApi() throws IdRepoException, SSOException, NodeProcessException {
+    public void testProcessFailureWhenExceptionWhileMakingCallToSinchApi() throws IdRepoException, SSOException {
         injectDefaultConfig();
         mockExceptionWhileMakingRestCall();
         Map attributeMap = ImmutableMap.of(config.identityPhoneNumberAttribute(), FAKE_NUM);
         Mockito.when(mockUser.getAttributes()).thenReturn(attributeMap);
         Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
-        Assertions.assertThrows(NodeProcessException.class, () -> {
-            sinchAuthenticationNode.process(context);
-        });
+        Assertions.assertThrows(NodeProcessException.class, () -> sinchAuthenticationNode.process(context));
+    }
+
+    @Test
+    public void testPhoneNumberFormattingWithWhitespaces() throws NodeProcessException {
+        injectDefaultConfig();
+        mockSuccessfulRestApiCall();
+        NameCallback phoneNumberCallback = new NameCallback("ignored");
+        phoneNumberCallback.setName("+48 123 456 789");
+        List<Callback> callbacks = Arrays.asList(
+                new TextOutputCallback(TextOutputCallback.INFORMATION, "ignored"),
+                phoneNumberCallback);
+
+        sinchAuthenticationNode.process(buildThreeContext(callbacks));
+        Mockito.verify(sinchApiService).initiateSynchronically(FAKE_APP_HASH, VerificationMethodType.SMS, "+48123456789");
+    }
+
+    @Test
+    public void testPhoneNumberFormattingWithoutLeadingPlus() throws NodeProcessException {
+        injectDefaultConfig();
+        mockSuccessfulRestApiCall();
+        NameCallback phoneNumberCallback = new NameCallback("ignored");
+        phoneNumberCallback.setName("48123456789");
+        List<Callback> callbacks = Arrays.asList(
+                new TextOutputCallback(TextOutputCallback.INFORMATION, "ignored"),
+                phoneNumberCallback);
+
+        sinchAuthenticationNode.process(buildThreeContext(callbacks));
+        Mockito.verify(sinchApiService).initiateSynchronically(FAKE_APP_HASH, VerificationMethodType.SMS, "+48123456789");
     }
 
     private void injectDefaultConfig() {
@@ -152,6 +177,12 @@ public class SinchAuthenticationNodeTests {
         Assertions.assertEquals(FAKE_METHOD.toString(), action.sharedState.get(SinchAuthenticationNode.VER_METHOD_KEY).asString());
         Assertions.assertEquals(FAKE_NUM, action.sharedState.get(SinchAuthenticationNode.USER_PHONE_KEY).asString());
         Assertions.assertEquals(FAKE_APP_HASH, action.transientState.get(SinchAuthenticationNode.APP_HASH_KEY).asString());
+    }
+
+    private TreeContext buildThreeContext(List<Callback> callbacks) {
+        return new TreeContext(retrieveSharedState(), json(object()),
+                new ExternalRequestContext.Builder().build(), callbacks
+                , Optional.of("mockUserId"));
     }
 
 }
