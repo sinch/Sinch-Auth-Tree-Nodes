@@ -41,9 +41,8 @@ public class SinchCodeCollectorNodeTests {
 
     @BeforeEach
     public void setup() throws Exception {
-        context = new TreeContext(retrieveSharedState(), retrieveTransientState(),
-                new ExternalRequestContext.Builder().build(), emptyList(), Optional.of("mockUserId"));
         MockitoAnnotations.openMocks(this).close();
+        context = buildTreeContext(emptyList());
         sinchCodeCollectorCodeNode = new SinchCodeCollectorCodeNode(config, sinchApiService);
     }
 
@@ -152,6 +151,11 @@ public class SinchCodeCollectorNodeTests {
 
     private JsonValue retrieveTransientState() {
         return json(object(field(SinchAuthenticationNode.APP_HASH_KEY, FAKE_APP_HASH)));
+    }
+
+    private TreeContext buildTreeContext(List<Callback> callbacks) {
+        return new TreeContext(retrieveSharedState(), retrieveTransientState(),
+                new ExternalRequestContext.Builder().build(), callbacks, Optional.of("mockUserId"));
     }
 
 }

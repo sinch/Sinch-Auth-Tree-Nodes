@@ -38,8 +38,7 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
     private final SinchApiService sinchApiService;
 
     /**
-     * Create the node using Guice injection.
-     *
+     * Creates the node
      * @param config          The service config.
      * @param sinchApiService Service responsible for communication with Sinch Rest API Service.
      */
@@ -80,7 +79,7 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
     private Action collectCode(TreeContext treeContext, boolean isHidden) {
         ResourceBundle bundle = treeContext.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
 
-        List<Callback> callbacks = new ArrayList<Callback>() {{
+        List<Callback> callbacks = new ArrayList<>() {{
             add(new TextOutputCallback(TextOutputCallback.INFORMATION, bundle.getString("callback.collectCodePrompt")));
         }};
         if (isHidden) {
