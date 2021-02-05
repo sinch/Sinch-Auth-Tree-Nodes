@@ -78,7 +78,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     public Action process(TreeContext context) throws NodeProcessException {
         ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
         String phoneNumber = readProfilePhoneNumber(context.sharedState.get(IDENTITY_USERNAME_KEY).asString());
-        if (phoneNumber == null) {
+        if (!isProfileNumberValid(phoneNumber)) {
             if (context.hasCallbacks() && context.getCallback(NameCallback.class).isPresent()) {
                 phoneNumber = context.getCallback(NameCallback.class).get().getName();
                 return processInitiation(context, phoneNumber);
@@ -130,6 +130,11 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
             logger.debug("Exception while getting user phone number from profile " + e.getLocalizedMessage());
             return null;
         }
+    }
+
+    private boolean isProfileNumberValid(String profileNumber) {
+        return !(profileNumber == null || profileNumber.equalsIgnoreCase("null")
+                || profileNumber.isBlank() || profileNumber.isEmpty());
     }
 
     private String formatPhoneNumber(String unformatted) {
