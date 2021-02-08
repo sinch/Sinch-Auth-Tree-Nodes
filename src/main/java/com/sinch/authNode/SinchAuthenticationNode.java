@@ -21,6 +21,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.sinch.authNode.service.SinchApiService;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
+import com.sinch.verification.process.ApiCallException;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
@@ -76,20 +77,15 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     @Override
     public Action process(TreeContext context) throws NodeProcessException {
-        ResourceBundle bundle = context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
-        String phoneNumber = readProfilePhoneNumber(context.sharedState.get(IDENTITY_USERNAME_KEY).asString());
-        if (!isProfileNumberValid(phoneNumber)) {
-            if (context.hasCallbacks() && context.getCallback(NameCallback.class).isPresent()) {
-                phoneNumber = context.getCallback(NameCallback.class).get().getName();
-                return processInitiation(context, phoneNumber);
-            } else {
-                return Action.send(Arrays.asList(
-                        new TextOutputCallback(TextOutputCallback.INFORMATION, bundle.getString("callback.phoneNumberText")),
-                        new NameCallback(bundle.getString("callback.phoneNumber"))
-                )).build();
-            }
+        String phoneNumber = readCallbackPhoneNumber(context);
+        if (phoneNumber != null) {
+            return processInitiation(context, phoneNumber);
+        } else {
+            phoneNumber = readProfilePhoneNumber(context.sharedState.get(IDENTITY_USERNAME_KEY).asString());
+            return (phoneNumber == null) ?
+                    buildInputPhoneNumberAction(bundleFromContext(context)) :
+                    processInitiation(context, phoneNumber);
         }
-        return processInitiation(context, phoneNumber);
     }
 
     @Override
@@ -103,8 +99,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         try {
             verificationId = initiateVerification(config.appHash(), formatPhoneNumber(userPhone), verificationMethod).getId();
         } catch (Exception e) {
-            logger.debug("Exception while initiating the verification process " + e.getLocalizedMessage());
-            throw new NodeProcessException("Unable to initiate the verification process", e);
+            return askForPhoneNumberIfPossibleBasedOnException(e, bundleFromContext(context));
         }
         logger.debug("Verification initiated with id " + verificationId);
         return goToNext()
@@ -123,11 +118,37 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         );
     }
 
+    private Action askForPhoneNumberIfPossibleBasedOnException(Exception exception, ResourceBundle bundle) throws NodeProcessException {
+        if (exception instanceof ApiCallException && ((ApiCallException) exception).getData().getMightBePhoneFormattingError()) {
+            logger.debug("Exception connected with badly formatted phone number, asking for phone number explicitly.");
+            return buildInputPhoneNumberAction(bundle);
+        } else {
+            logger.debug("Unknown exception " + exception.getLocalizedMessage());
+            throw new NodeProcessException("Unable to initiate the verification process", exception);
+        }
+    }
+
+    private Action buildInputPhoneNumberAction(ResourceBundle bundle) {
+        return Action.send(Arrays.asList(
+                new TextOutputCallback(TextOutputCallback.INFORMATION, bundle.getString("callback.phoneNumberText")),
+                new NameCallback(bundle.getString("callback.phoneNumber"))
+        )).build();
+    }
+
     private String readProfilePhoneNumber(String username) {
         try {
-            return String.valueOf(coreWrapper.getIdentity(username, realm).getAttributes().get(config.identityPhoneNumberAttribute()));
+            String phoneProfileNumber = String.valueOf(coreWrapper.getIdentity(username, realm).getAttributes().get(config.identityPhoneNumberAttribute()));
+            return isProfileNumberValid(phoneProfileNumber) ? phoneProfileNumber : null;
         } catch (Exception e) {
             logger.debug("Exception while getting user phone number from profile " + e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    private String readCallbackPhoneNumber(TreeContext context) {
+        if (context.hasCallbacks() && context.getCallback(NameCallback.class).isPresent()) {
+            return context.getCallback(NameCallback.class).get().getName();
+        } else {
             return null;
         }
     }
@@ -139,6 +160,10 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     private String formatPhoneNumber(String unformatted) {
         return "+" + unformatted.replaceAll("[\\D]", "");
+    }
+
+    private ResourceBundle bundleFromContext(TreeContext context) {
+        return context.request.locales.getBundleInPreferredLocale(BUNDLE, getClass().getClassLoader());
     }
 
     /**
