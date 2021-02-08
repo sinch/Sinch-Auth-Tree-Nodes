@@ -3,9 +3,11 @@ package com.sinch.authNode;
 import com.google.common.collect.ImmutableMap;
 import com.iplanet.sso.SSOException;
 import com.sinch.authNode.service.SinchApiService;
+import com.sinch.verification.model.ApiErrorData;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
 import com.sinch.verification.model.initiation.methods.AutoInitializationResponseDetails;
+import com.sinch.verification.process.ApiCallException;
 import com.sun.identity.idm.AMIdentity;
 import com.sun.identity.idm.IdRepoException;
 import org.forgerock.json.JsonValue;
@@ -95,6 +97,27 @@ public class SinchAuthenticationNodeTests {
     }
 
     @Test
+    public void testProcessWhenMalformedProfileNumber() throws NodeProcessException, IdRepoException, SSOException {
+        injectDefaultConfig();
+        mockSuccessfulRestApiCall();
+
+        Map attributeMap = ImmutableMap.of(config.identityPhoneNumberAttribute(), "");
+        Mockito.when(mockUser.getAttributes()).thenReturn(attributeMap);
+        Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
+
+        verifyProcessProducesExplicitPhoneNumberInputRequest();
+    }
+
+    @Test
+    public void testProcessWhenApiReturnsPhoneNumberFormattingError() throws NodeProcessException {
+        injectDefaultConfig();
+        mockExceptionWhileMakingRestCall(
+                new ApiCallException(new ApiErrorData(ApiErrorData.ErrorCodes.ParameterValidation, "", ""))
+        );
+        verifyProcessProducesExplicitPhoneNumberInputRequest();
+    }
+
+    @Test
     public void testProcessWhenNumberInCallback() throws NodeProcessException {
         injectDefaultConfig();
         mockSuccessfulRestApiCall();
@@ -116,7 +139,7 @@ public class SinchAuthenticationNodeTests {
     @Test
     public void testProcessFailureWhenExceptionWhileMakingCallToSinchApi() throws IdRepoException, SSOException {
         injectDefaultConfig();
-        mockExceptionWhileMakingRestCall();
+        mockExceptionWhileMakingRestCall(new Exception());
         Map attributeMap = ImmutableMap.of(config.identityPhoneNumberAttribute(), FAKE_NUM);
         Mockito.when(mockUser.getAttributes()).thenReturn(attributeMap);
         Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
@@ -165,11 +188,20 @@ public class SinchAuthenticationNodeTests {
                 );
     }
 
-    private void mockExceptionWhileMakingRestCall() {
+    private void mockExceptionWhileMakingRestCall(Exception exception) {
         Mockito.when(sinchApiService.initiateSynchronically(anyString(), any(), anyString()))
                 .thenAnswer(ignored -> {
-                    throw new Exception();
+                    throw exception;
                 });
+    }
+
+    private void verifyProcessProducesExplicitPhoneNumberInputRequest() throws NodeProcessException {
+        Action result = sinchAuthenticationNode.process(context);
+        Assertions.assertEquals(2, result.callbacks.size());
+        Callback prompt = result.callbacks.get(0);
+        Callback enterPhone = result.callbacks.get(1);
+        Assertions.assertTrue(prompt instanceof TextOutputCallback);
+        Assertions.assertTrue(enterPhone instanceof NameCallback);
     }
 
     private void verifyOutcomeSharedState(Action action) {
