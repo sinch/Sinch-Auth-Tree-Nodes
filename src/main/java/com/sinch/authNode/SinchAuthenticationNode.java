@@ -97,7 +97,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         String verificationId;
         VerificationMethodType verificationMethod = config.verificationMethod().asSinchMethodType();
         try {
-            verificationId = initiateVerification(config.appHash(), formatPhoneNumber(userPhone), verificationMethod).getId();
+            verificationId = initiateVerification(config.appKey(), formatPhoneNumber(userPhone), verificationMethod).getId();
         } catch (Exception e) {
             return askForPhoneNumberIfPossibleBasedOnException(e, bundleFromContext(context));
         }
@@ -106,7 +106,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
                 .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, verificationMethod.toString()))
-                .replaceTransientState(context.transientState.put(APP_HASH_KEY, config.appHash()))
+                .replaceTransientState(context.transientState.put(APP_HASH_KEY, config.appKey()))
                 .build();
     }
 
@@ -172,10 +172,10 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     public interface Config {
 
         /**
-         * Application hash copied from Sinch portal.
+         * Application key copied from Sinch portal.
          */
         @Attribute(order = 1, validators = {RequiredValueValidator.class})
-        default String appHash() {
+        default String appKey() {
             return "";
         }
 

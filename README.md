@@ -29,7 +29,7 @@ This node initiates the verification process. By the default it looks into `iden
 If no phone number is present node presents the user a page where the number can be typed and used for verification purposes.
 Properties of the node:
 
-* **appHash** - Application Hash for your application found in the Sinch Verification Portal dashboard.
+* **appKey** - Application key for your application found in the Sinch Verification Portal dashboard.
 * **verificationMethod** - Verification method used to verify the phone number.
 * **identityPhoneNumberAttribute** - Attribute used to get user's phone number from identities store.
 
@@ -37,7 +37,7 @@ Properties of the node:
 
 This node prompts the user to enter the verification code that depending on the chosen verification method is:
 
-* **SMS** - 4 Digits number received in text message.
+* **SMS** - Verification code received in text message.
 * **Flashcall** - Full number of the incoming call. (formatted according to [E.164](http://en.wikipedia.org/wiki/E.164) specification and prefixed with `+`).
 * **Callout** - The code is spoken by text-to-speech software after picking up the incoming phone call.
 
