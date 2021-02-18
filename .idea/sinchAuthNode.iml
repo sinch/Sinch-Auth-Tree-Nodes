@@ -23,7 +23,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.servlet:javax.servlet-api:3.0.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.forgerock.am:openam-guice-core:7.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.inject:guice:no_aop:4.2.1" level="project" />
-    <orderEntry type="library" name="Maven: com.sinch.jvm.sdk.verification:library:1.0.8" level="project" />
+    <orderEntry type="library" name="Maven: com.sinch.jvm.sdk.verification:library:1.0.9" level="project" />
     <orderEntry type="library" name="Maven: com.squareup.retrofit2:retrofit:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.5.0" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0" level="project" />
