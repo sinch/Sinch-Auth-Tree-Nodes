@@ -19,6 +19,7 @@ package com.sinch.authNode;
 
 import com.google.inject.assistedinject.Assisted;
 import com.sinch.authNode.service.SinchApiService;
+import com.sinch.verification.metadata.factory.DefaultJVMMetadataFactory;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
 import com.sinch.verification.process.ApiCallException;
@@ -52,6 +53,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     static final String VER_METHOD_KEY = "verMethodKey";
 
     private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
+    private static final String PLATFORM = "Forgerock";
 
     private final Logger logger = LoggerFactory.getLogger(SinchAuthenticationNode.class);
     private final Config config;
@@ -114,7 +116,8 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         return sinchApiService.initiateSynchronically(
                 appHash,
                 verificationMethod,
-                phoneNumber
+                phoneNumber,
+                new DefaultJVMMetadataFactory(PLATFORM)
         );
     }
 

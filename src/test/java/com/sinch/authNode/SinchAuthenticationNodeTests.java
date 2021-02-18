@@ -3,6 +3,7 @@ package com.sinch.authNode;
 import com.google.common.collect.ImmutableMap;
 import com.iplanet.sso.SSOException;
 import com.sinch.authNode.service.SinchApiService;
+import com.sinch.verification.metadata.factory.DefaultJVMMetadataFactory;
 import com.sinch.verification.model.ApiErrorData;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
@@ -20,6 +21,7 @@ import org.forgerock.openam.core.realms.Realm;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -38,8 +40,7 @@ import static com.sinch.authNode.TestConstants.*;
 import static java.util.Collections.emptyList;
 import static org.forgerock.json.JsonValue.*;
 import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 
 public class SinchAuthenticationNodeTests {
 
@@ -61,9 +62,12 @@ public class SinchAuthenticationNodeTests {
     private SinchAuthenticationNode sinchAuthenticationNode;
     private TreeContext context;
 
+    private ArgumentMatcher<DefaultJVMMetadataFactory> factoryMatcher;
+
     @BeforeEach
     public void setup() throws Exception {
         MockitoAnnotations.openMocks(this).close();
+        factoryMatcher = (argument -> argument.getPlatform().equals("Forgerock"));
         context = buildThreeContext(emptyList());
         sinchAuthenticationNode = new SinchAuthenticationNode(config, realm, coreWrapper, sinchApiService);
     }
@@ -91,7 +95,7 @@ public class SinchAuthenticationNodeTests {
         Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
 
         Action result = sinchAuthenticationNode.process(context);
-        Mockito.verify(sinchApiService).initiateSynchronically(FAKE_APP_KEY, VerificationMethodType.SMS, FAKE_NUM);
+        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(VerificationMethodType.SMS), eq(FAKE_NUM), argThat(factoryMatcher));
         Assert.assertEquals(result.outcome, "outcome");
         verifyOutcomeSharedState(result);
     }
@@ -131,7 +135,7 @@ public class SinchAuthenticationNodeTests {
                 , Optional.of("mockUserId"));
 
         Action result = sinchAuthenticationNode.process(context);
-        Mockito.verify(sinchApiService).initiateSynchronically(FAKE_APP_KEY, VerificationMethodType.SMS, FAKE_NUM);
+        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(VerificationMethodType.SMS), eq(FAKE_NUM), argThat(factoryMatcher));
         Assert.assertEquals(result.outcome, "outcome");
         verifyOutcomeSharedState(result);
     }
@@ -157,7 +161,7 @@ public class SinchAuthenticationNodeTests {
                 phoneNumberCallback);
 
         sinchAuthenticationNode.process(buildThreeContext(callbacks));
-        Mockito.verify(sinchApiService).initiateSynchronically(FAKE_APP_KEY, VerificationMethodType.SMS, "+48123456789");
+        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(VerificationMethodType.SMS), eq("+48123456789"), argThat(factoryMatcher));
     }
 
     @Test
@@ -171,7 +175,7 @@ public class SinchAuthenticationNodeTests {
                 phoneNumberCallback);
 
         sinchAuthenticationNode.process(buildThreeContext(callbacks));
-        Mockito.verify(sinchApiService).initiateSynchronically(FAKE_APP_KEY, VerificationMethodType.SMS, "+48123456789");
+        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(VerificationMethodType.SMS), eq("+48123456789"), argThat(factoryMatcher));
     }
 
     private void injectDefaultConfig() {
@@ -181,7 +185,7 @@ public class SinchAuthenticationNodeTests {
     }
 
     private void mockSuccessfulRestApiCall() {
-        Mockito.when(sinchApiService.initiateSynchronically(anyString(), any(), anyString()))
+        Mockito.when(sinchApiService.initiateSynchronically(anyString(), any(), anyString(), any()))
                 .thenReturn(
                         new InitiationResponseData(FAKE_ID, new AutoInitializationResponseDetails(FAKE_ID, emptyList()), null,
                                 null, null, null, VerificationMethodType.SMS, null)
@@ -189,7 +193,7 @@ public class SinchAuthenticationNodeTests {
     }
 
     private void mockExceptionWhileMakingRestCall(Exception exception) {
-        Mockito.when(sinchApiService.initiateSynchronically(anyString(), any(), anyString()))
+        Mockito.when(sinchApiService.initiateSynchronically(anyString(), any(), anyString(), any()))
                 .thenAnswer(ignored -> {
                     throw exception;
                 });
