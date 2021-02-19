@@ -37,6 +37,11 @@
       <option name="url" value="https://maven.forgerock.org/repo/openam-dependencies" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="bintray" />
+      <option name="url" value="https://jcenter.bintray.com" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="oracle-repository" />
       <option name="name" value="Oracle Repository" />
       <option name="url" value="http://download.oracle.com/maven" />
