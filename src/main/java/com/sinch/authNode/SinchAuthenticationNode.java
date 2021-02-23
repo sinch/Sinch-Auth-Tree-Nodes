@@ -188,7 +188,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         /**
          * Application secret copied from Sinch portal.
          */
-        @Attribute(order = 2, validators = {RequiredValueValidator.class}, hiddenFromConfigUi = true)
+        @Attribute(order = 2, validators = {RequiredValueValidator.class})
         default String appSecret() {
             return "";
         }
