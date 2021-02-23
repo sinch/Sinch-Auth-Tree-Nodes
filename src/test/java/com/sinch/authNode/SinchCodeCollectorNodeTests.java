@@ -82,7 +82,7 @@ public class SinchCodeCollectorNodeTests {
 
         Action result = sinchCodeCollectorCodeNode.process(context);
 
-        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_KEY, FAKE_ID, FAKE_CODE, FAKE_METHOD.asSinchMethodType());
+        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_KEY, FAKE_APP_SECRET, FAKE_ID, FAKE_CODE, FAKE_METHOD.asSinchMethodType());
         Assertions.assertEquals("true", result.outcome);
     }
 
@@ -98,7 +98,7 @@ public class SinchCodeCollectorNodeTests {
 
         Action result = sinchCodeCollectorCodeNode.process(context);
 
-        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_KEY, FAKE_ID, FAKE_CODE, FAKE_METHOD.asSinchMethodType());
+        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_KEY, FAKE_APP_SECRET, FAKE_ID, FAKE_CODE, FAKE_METHOD.asSinchMethodType());
         Assertions.assertEquals("true", result.outcome);
     }
 
@@ -113,7 +113,7 @@ public class SinchCodeCollectorNodeTests {
                 new ExternalRequestContext.Builder().build(), singletonList(passwordCallback), Optional.of("mockUserId"));
         Action result = sinchCodeCollectorCodeNode.process(context);
 
-        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_KEY, FAKE_ID, FAKE_CODE, FAKE_METHOD.asSinchMethodType());
+        Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_KEY, FAKE_APP_SECRET, FAKE_ID, FAKE_CODE, FAKE_METHOD.asSinchMethodType());
         Assertions.assertEquals("false", result.outcome);
     }
 
@@ -133,13 +133,13 @@ public class SinchCodeCollectorNodeTests {
     }
 
     private void mockVerifyCall(boolean isSuccess) {
-        Mockito.when(sinchApiService.verifySynchronicallyById(any(), any(), any(), any())).thenReturn(new VerificationResponseData(
+        Mockito.when(sinchApiService.verifySynchronicallyById(any(), any(), any(), any(), any())).thenReturn(new VerificationResponseData(
                 FAKE_ID, isSuccess ? VerificationStatus.SUCCESSFUL : VerificationStatus.ERROR, FAKE_METHOD.asSinchMethodType(), null, null
         ));
     }
 
     private void mockErrorWhileMakingCall() {
-        Mockito.when(sinchApiService.verifySynchronicallyById(any(), any(), any(), any())).thenAnswer(ignored -> new Exception());
+        Mockito.when(sinchApiService.verifySynchronicallyById(any(), any(), any(), any(), any())).thenAnswer(ignored -> new Exception());
     }
 
     private JsonValue retrieveSharedState() {
@@ -150,7 +150,8 @@ public class SinchCodeCollectorNodeTests {
     }
 
     private JsonValue retrieveTransientState() {
-        return json(object(field(SinchAuthenticationNode.APP_HASH_KEY, FAKE_APP_KEY)));
+        return json(object(field(SinchAuthenticationNode.APP_KEY_KEY, FAKE_APP_KEY),
+                field(SinchAuthenticationNode.APP_SECRET_KEY, FAKE_APP_SECRET)));
     }
 
     private TreeContext buildTreeContext(List<Callback> callbacks) {

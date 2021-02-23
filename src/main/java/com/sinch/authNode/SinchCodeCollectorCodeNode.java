@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-import static com.sinch.authNode.SinchAuthenticationNode.APP_HASH_KEY;
-import static com.sinch.authNode.SinchAuthenticationNode.VER_METHOD_KEY;
+import static com.sinch.authNode.SinchAuthenticationNode.*;
 
 /**
  * A node that performs actual verification code check against Sinch backend.
@@ -39,6 +38,7 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
 
     /**
      * Creates the node
+     *
      * @param config          The service config.
      * @param sinchApiService Service responsible for communication with Sinch Rest API Service.
      */
@@ -52,20 +52,21 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
     public Action process(TreeContext treeContext) {
         String verificationCode = getVerificationCode(treeContext, config.isCodeHidden()).orElse(null);
         String verificationId = treeContext.getState(SinchAuthenticationNode.INITIATED_ID_KEY).asString();
-        String appHash = treeContext.getState(APP_HASH_KEY).asString();
+        String appKey = treeContext.getState(APP_KEY_KEY).asString();
+        String appSecret = treeContext.getState(APP_SECRET_KEY).asString();
         VerificationMethodType method = VerificationMethodType.valueOf(treeContext.getState(VER_METHOD_KEY).asString());
         logger.debug("Process of SinchCodeCollectorCodeNode called. Verification code: " + verificationCode +
-                " verificationId: " + verificationId + "appHash" + appHash + " method: " + method);
+                " verificationId: " + verificationId + "appKey" + appKey + " method: " + method);
         if (verificationCode == null) {
             return collectCode(treeContext, config.isCodeHidden());
         } else {
-            return executeCodeVerificationCheck(appHash, verificationId, method, verificationCode);
+            return executeCodeVerificationCheck(appKey, appSecret, verificationId, method, verificationCode);
         }
     }
 
     @Override
     public InputState[] getInputs() {
-        return new InputState[]{new InputState(APP_HASH_KEY)};
+        return new InputState[]{new InputState(APP_KEY_KEY), new InputState(APP_SECRET_KEY)};
     }
 
     private Optional<String> getVerificationCode(TreeContext treeContext, boolean isCodeHidden) {
@@ -90,11 +91,12 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
         return Action.send(callbacks).build();
     }
 
-    private Action executeCodeVerificationCheck(String appHash, String verificationId, VerificationMethodType method, String verificationCode) {
+    private Action executeCodeVerificationCheck(String appKey, String appSecret, String verificationId, VerificationMethodType method, String verificationCode) {
         boolean isVerifiedSuccessfully;
         try {
             VerificationResponseData verificationResponseData = sinchApiService.verifySynchronicallyById(
-                    appHash,
+                    appKey,
+                    appSecret,
                     verificationId,
                     verificationCode,
                     method);
