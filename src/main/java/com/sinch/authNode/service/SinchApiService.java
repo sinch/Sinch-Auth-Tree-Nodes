@@ -8,9 +8,9 @@ import com.sinch.verification.utils.Factory;
 
 public interface SinchApiService {
 
-    InitiationResponseData initiateSynchronically(String appHash, VerificationMethodType verificationMethod, String phoneNumber,
+    InitiationResponseData initiateSynchronically(String appHash, String appSecret, VerificationMethodType verificationMethod, String phoneNumber,
                                                   Factory<Metadata> metadataFactory);
 
-    VerificationResponseData verifySynchronicallyById(String appHash, String verificationId, String verificationCode, VerificationMethodType verificationMethodType);
+    VerificationResponseData verifySynchronicallyById(String appHash, String appSecret, String verificationId, String verificationCode, VerificationMethodType verificationMethodType);
 
 }

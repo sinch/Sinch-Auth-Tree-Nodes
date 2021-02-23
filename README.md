@@ -30,6 +30,7 @@ If no phone number is present node presents the user a page where the number can
 Properties of the node:
 
 * **appKey** - Application key for your application found in the Sinch Verification Portal dashboard.
+* **appSecret** - Application secret for your application found in the Sinch Verification Portal dashboard.
 * **verificationMethod** - Verification method used to verify the phone number.
 * **identityPhoneNumberAttribute** - Attribute used to get user's phone number from identities store.
 

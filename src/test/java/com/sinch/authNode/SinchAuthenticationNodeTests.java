@@ -95,7 +95,7 @@ public class SinchAuthenticationNodeTests {
         Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
 
         Action result = sinchAuthenticationNode.process(context);
-        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(VerificationMethodType.SMS), eq(FAKE_NUM), argThat(factoryMatcher));
+        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(FAKE_APP_SECRET), eq(VerificationMethodType.SMS), eq(FAKE_NUM), argThat(factoryMatcher));
         Assert.assertEquals(result.outcome, "outcome");
         verifyOutcomeSharedState(result);
     }
@@ -135,7 +135,7 @@ public class SinchAuthenticationNodeTests {
                 , Optional.of("mockUserId"));
 
         Action result = sinchAuthenticationNode.process(context);
-        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(VerificationMethodType.SMS), eq(FAKE_NUM), argThat(factoryMatcher));
+        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(FAKE_APP_SECRET), eq(VerificationMethodType.SMS), eq(FAKE_NUM), argThat(factoryMatcher));
         Assert.assertEquals(result.outcome, "outcome");
         verifyOutcomeSharedState(result);
     }
@@ -161,7 +161,7 @@ public class SinchAuthenticationNodeTests {
                 phoneNumberCallback);
 
         sinchAuthenticationNode.process(buildThreeContext(callbacks));
-        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(VerificationMethodType.SMS), eq("+48123456789"), argThat(factoryMatcher));
+        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(FAKE_APP_SECRET), eq(VerificationMethodType.SMS), eq("+48123456789"), argThat(factoryMatcher));
     }
 
     @Test
@@ -175,17 +175,18 @@ public class SinchAuthenticationNodeTests {
                 phoneNumberCallback);
 
         sinchAuthenticationNode.process(buildThreeContext(callbacks));
-        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(VerificationMethodType.SMS), eq("+48123456789"), argThat(factoryMatcher));
+        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(FAKE_APP_SECRET), eq(VerificationMethodType.SMS), eq("+48123456789"), argThat(factoryMatcher));
     }
 
     private void injectDefaultConfig() {
         Mockito.when(config.identityPhoneNumberAttribute()).thenReturn("telephoneNumber");
         Mockito.when(config.appKey()).thenReturn(FAKE_APP_KEY);
+        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET);
         Mockito.when(config.verificationMethod()).thenReturn(FAKE_METHOD);
     }
 
     private void mockSuccessfulRestApiCall() {
-        Mockito.when(sinchApiService.initiateSynchronically(anyString(), any(), anyString(), any()))
+        Mockito.when(sinchApiService.initiateSynchronically(anyString(), anyString(), any(), anyString(), any()))
                 .thenReturn(
                         new InitiationResponseData(FAKE_ID, new AutoInitializationResponseDetails(FAKE_ID, emptyList()), null,
                                 null, null, null, VerificationMethodType.SMS, null)
@@ -193,7 +194,7 @@ public class SinchAuthenticationNodeTests {
     }
 
     private void mockExceptionWhileMakingRestCall(Exception exception) {
-        Mockito.when(sinchApiService.initiateSynchronically(anyString(), any(), anyString(), any()))
+        Mockito.when(sinchApiService.initiateSynchronically(anyString(), anyString(), any(), anyString(), any()))
                 .thenAnswer(ignored -> {
                     throw exception;
                 });
@@ -212,7 +213,7 @@ public class SinchAuthenticationNodeTests {
         Assertions.assertEquals(FAKE_ID, action.sharedState.get(INITIATED_ID_KEY).asString());
         Assertions.assertEquals(FAKE_METHOD.toString(), action.sharedState.get(SinchAuthenticationNode.VER_METHOD_KEY).asString());
         Assertions.assertEquals(FAKE_NUM, action.sharedState.get(SinchAuthenticationNode.USER_PHONE_KEY).asString());
-        Assertions.assertEquals(FAKE_APP_KEY, action.transientState.get(SinchAuthenticationNode.APP_HASH_KEY).asString());
+        Assertions.assertEquals(FAKE_APP_KEY, action.transientState.get(SinchAuthenticationNode.APP_KEY_KEY).asString());
     }
 
     private TreeContext buildThreeContext(List<Callback> callbacks) {
