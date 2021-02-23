@@ -49,7 +49,8 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     static final String USER_PHONE_KEY = "phoneNumberKey";
     static final String INITIATED_ID_KEY = "initiatedIdKey";
-    static final String APP_HASH_KEY = "appHashKey";
+    static final String APP_KEY_KEY = "appHashKey";
+    static final String APP_SECRET_KEY = "appSecretKey";
     static final String VER_METHOD_KEY = "verMethodKey";
 
     private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
@@ -92,14 +93,14 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     @Override
     public OutputState[] getOutputs() {
-        return new OutputState[]{new OutputState(APP_HASH_KEY)};
+        return new OutputState[]{new OutputState(APP_KEY_KEY), new OutputState(APP_SECRET_KEY)};
     }
 
     private Action processInitiation(TreeContext context, String userPhone) throws NodeProcessException {
         String verificationId;
         VerificationMethodType verificationMethod = config.verificationMethod().asSinchMethodType();
         try {
-            verificationId = initiateVerification(config.appKey(), formatPhoneNumber(userPhone), verificationMethod).getId();
+            verificationId = initiateVerification(config.appKey(), config.appSecret(), formatPhoneNumber(userPhone), verificationMethod).getId();
         } catch (Exception e) {
             return askForPhoneNumberIfPossibleBasedOnException(e, bundleFromContext(context));
         }
@@ -108,13 +109,15 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
                 .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, verificationMethod.toString()))
-                .replaceTransientState(context.transientState.put(APP_HASH_KEY, config.appKey()))
+                .replaceTransientState(context.transientState.put(APP_KEY_KEY, config.appKey()))
+                .replaceTransientState(context.transientState.put(APP_SECRET_KEY, config.appSecret()))
                 .build();
     }
 
-    private InitiationResponseData initiateVerification(String appHash, String phoneNumber, VerificationMethodType verificationMethod) {
+    private InitiationResponseData initiateVerification(String appKey, String appSecret, String phoneNumber, VerificationMethodType verificationMethod) {
         return sinchApiService.initiateSynchronically(
-                appHash,
+                appKey,
+                appSecret,
                 verificationMethod,
                 phoneNumber,
                 new DefaultJVMMetadataFactory(PLATFORM)
@@ -183,9 +186,17 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         }
 
         /**
+         * Application secret copied from Sinch portal.
+         */
+        @Attribute(order = 2, validators = {RequiredValueValidator.class}, hiddenFromConfigUi = true)
+        default String appSecret() {
+            return "";
+        }
+
+        /**
          * Verification method used to verify user's phone number.
          */
-        @Attribute(order = 2, validators = {RequiredValueValidator.class})
+        @Attribute(order = 3, validators = {RequiredValueValidator.class})
         default AMSupportedVerificationMethod verificationMethod() {
             return AMSupportedVerificationMethod.SMS;
         }
@@ -193,7 +204,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         /**
          * Attribute used to get user's phone number from identities store.
          */
-        @Attribute(order = 3)
+        @Attribute(order = 4)
         default String identityPhoneNumberAttribute() {
             return DEFAULT_IDENTITY_PHONE_ATTRIBUTE;
         }
