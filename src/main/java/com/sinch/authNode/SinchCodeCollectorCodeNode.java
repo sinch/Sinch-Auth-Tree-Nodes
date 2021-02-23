@@ -56,7 +56,7 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
         String appSecret = treeContext.getState(APP_SECRET_KEY).asString();
         VerificationMethodType method = VerificationMethodType.valueOf(treeContext.getState(VER_METHOD_KEY).asString());
         logger.debug("Process of SinchCodeCollectorCodeNode called. Verification code: " + verificationCode +
-                " verificationId: " + verificationId + "appKey" + appKey + "appSecret" + appSecret + " method: " + method);
+                " verificationId: " + verificationId + "appKey" + appKey + " method: " + method);
         if (verificationCode == null) {
             return collectCode(treeContext, config.isCodeHidden());
         } else {
