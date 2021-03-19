@@ -59,6 +59,7 @@ import java.util.Map;
  */
 public class SinchAuthNodePlugin extends AbstractNodeAmPlugin {
 
+    //TODO Current version should be 1.0.0 so that nodes don't reinstall on restart of AM
     static private String currentVersion = "0.0.0";
 
     /**

@@ -53,6 +53,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     static final String APP_SECRET_KEY = "appSecretKey";
     static final String VER_METHOD_KEY = "verMethodKey";
 
+    //TODO Bundle should use relative class name such as BUNDLE = SinchAuthenticationNode.class.getName();
     private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
     private static final String PLATFORM = "Forgerock";
 
@@ -109,6 +110,10 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
                 .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, verificationMethod.toString()))
+                //TODO Consider adding App Key and App Secret configuration options to the Collector node as well or
+                // abstracting this configuration out to a service. This is transient state data is destroyed if any
+                // callbacks are sent to the client. Meaning if a customer puts a node in between the Sinch Authentication
+                // Node and the Sinch Code collector node, the flow will fail.
                 .replaceTransientState(context.transientState.put(APP_KEY_KEY, config.appKey()))
                 .replaceTransientState(context.transientState.put(APP_SECRET_KEY, config.appSecret()))
                 .build();
@@ -188,6 +193,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         /**
          * Application secret copied from Sinch portal.
          */
+        //TODO App Secret configuration should be type char[]. This is the plain text does not appear in the console
         @Attribute(order = 2, validators = {RequiredValueValidator.class})
         default String appSecret() {
             return "";
