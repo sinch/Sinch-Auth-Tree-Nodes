@@ -18,6 +18,7 @@
 package com.sinch.authNode;
 
 import com.google.inject.assistedinject.Assisted;
+import com.sinch.authNode.service.SinchServiceAccessHelpers;
 import com.sinch.authNode.service.SinchApiService;
 import com.sinch.verification.metadata.factory.DefaultJVMMetadataFactory;
 import com.sinch.verification.model.VerificationMethodType;
@@ -28,6 +29,7 @@ import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
 import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.core.realms.Realm;
+import org.forgerock.openam.sm.AnnotatedServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +55,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     static final String APP_SECRET_KEY = "appSecretKey";
     static final String VER_METHOD_KEY = "verMethodKey";
 
-    private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
+    private static final String BUNDLE = SinchAuthenticationNode.class.getName();
     private static final String PLATFORM = "Forgerock";
 
     private final Logger logger = LoggerFactory.getLogger(SinchAuthenticationNode.class);
@@ -61,6 +63,9 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     private final Realm realm;
     private final CoreWrapper coreWrapper;
     private final SinchApiService sinchApiService;
+    private final AnnotatedServiceRegistry annotatedServiceRegistry;
+    private final SinchServiceAccessHelpers sinchServiceAccessHelpers = new SinchServiceAccessHelpers();
+
 
     /**
      * Creates the node.
@@ -69,13 +74,16 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
      * @param realm           The realm of the node.
      * @param coreWrapper     The coreWrapper instance
      * @param sinchApiService Service responsible for communication with Sinch Rest API Service.
+     * @param annotatedServiceRegistry Instance of AnnotatedServiceRegistry.
      */
     @Inject
-    public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm, CoreWrapper coreWrapper, SinchApiService sinchApiService) {
+    public SinchAuthenticationNode(@Assisted Config config, @Assisted Realm realm, CoreWrapper coreWrapper,
+                                   SinchApiService sinchApiService, AnnotatedServiceRegistry annotatedServiceRegistry) {
         this.config = config;
         this.realm = realm;
         this.coreWrapper = coreWrapper;
         this.sinchApiService = sinchApiService;
+        this.annotatedServiceRegistry = annotatedServiceRegistry;
     }
 
     @Override
@@ -99,8 +107,11 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
     private Action processInitiation(TreeContext context, String userPhone) throws NodeProcessException {
         String verificationId;
         VerificationMethodType verificationMethod = config.verificationMethod().asSinchMethodType();
+        String appKey = sinchServiceAccessHelpers.getAppKeyOrThrow(annotatedServiceRegistry, realm);
+        String appSecret = sinchServiceAccessHelpers.getAppSecretOrThrow(annotatedServiceRegistry, realm);
         try {
-            verificationId = initiateVerification(config.appKey(), config.appSecret(), formatPhoneNumber(userPhone), verificationMethod).getId();
+            verificationId = initiateVerification(appKey, appSecret, formatPhoneNumber(userPhone), verificationMethod).
+                    getId();
         } catch (Exception e) {
             return askForPhoneNumberIfPossibleBasedOnException(e, bundleFromContext(context));
         }
@@ -109,8 +120,6 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
                 .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, verificationMethod.toString()))
-                .replaceTransientState(context.transientState.put(APP_KEY_KEY, config.appKey()))
-                .replaceTransientState(context.transientState.put(APP_SECRET_KEY, config.appSecret()))
                 .build();
     }
 
@@ -176,22 +185,6 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
      * Configuration for the node.
      */
     public interface Config {
-
-        /**
-         * Application key copied from Sinch portal.
-         */
-        @Attribute(order = 1, validators = {RequiredValueValidator.class})
-        default String appKey() {
-            return "";
-        }
-
-        /**
-         * Application secret copied from Sinch portal.
-         */
-        @Attribute(order = 2, validators = {RequiredValueValidator.class})
-        default String appSecret() {
-            return "";
-        }
 
         /**
          * Verification method used to verify user's phone number.

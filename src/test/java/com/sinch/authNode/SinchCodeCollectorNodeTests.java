@@ -6,7 +6,10 @@ import com.sinch.verification.model.verification.VerificationStatus;
 import org.forgerock.json.JsonValue;
 import org.forgerock.openam.auth.node.api.Action;
 import org.forgerock.openam.auth.node.api.ExternalRequestContext;
+import org.forgerock.openam.auth.node.api.NodeProcessException;
 import org.forgerock.openam.auth.node.api.TreeContext;
+import org.forgerock.openam.core.realms.Realm;
+import org.forgerock.openam.sm.AnnotatedServiceRegistry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import javax.imageio.spi.ServiceRegistry;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
@@ -36,6 +40,12 @@ public class SinchCodeCollectorNodeTests {
     @Mock
     private SinchApiService sinchApiService;
 
+    @Mock
+    private Realm realm;
+
+    @Mock
+    private AnnotatedServiceRegistry annotatedServiceRegistry;
+
     private SinchCodeCollectorCodeNode sinchCodeCollectorCodeNode;
     private TreeContext context;
 
@@ -43,11 +53,11 @@ public class SinchCodeCollectorNodeTests {
     public void setup() throws Exception {
         MockitoAnnotations.openMocks(this).close();
         context = buildTreeContext(emptyList());
-        sinchCodeCollectorCodeNode = new SinchCodeCollectorCodeNode(config, sinchApiService);
+        sinchCodeCollectorCodeNode = new SinchCodeCollectorCodeNode(config, realm, sinchApiService, annotatedServiceRegistry);
     }
 
     @Test
-    public void testProcessOutcomeWhenNoCodeInputHidden() {
+    public void testProcessOutcomeWhenNoCodeInputHidden() throws NodeProcessException {
         Mockito.when(config.isCodeHidden()).thenReturn(true);
 
         Action result = sinchCodeCollectorCodeNode.process(context);
@@ -59,7 +69,7 @@ public class SinchCodeCollectorNodeTests {
     }
 
     @Test
-    public void testProcessOutcomeWhenNoCodeInputAsText() {
+    public void testProcessOutcomeWhenNoCodeInputAsText() throws NodeProcessException {
         Mockito.when(config.isCodeHidden()).thenReturn(false);
 
         Action result = sinchCodeCollectorCodeNode.process(context);
@@ -71,7 +81,7 @@ public class SinchCodeCollectorNodeTests {
     }
 
     @Test
-    public void testProcessWhenCodePassedAsPassword() {
+    public void testProcessWhenCodePassedAsPassword() throws NodeProcessException {
         Mockito.when(config.isCodeHidden()).thenReturn(true);
         PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
         passwordCallback.setPassword(FAKE_CODE.toCharArray());
@@ -87,7 +97,7 @@ public class SinchCodeCollectorNodeTests {
     }
 
     @Test
-    public void testProcessWhenCodePassedAsNameCallback() {
+    public void testProcessWhenCodePassedAsNameCallback() throws NodeProcessException {
         Mockito.when(config.isCodeHidden()).thenReturn(false);
         NameCallback nameCallback = new NameCallback("prompt", "dn");
         nameCallback.setName(FAKE_CODE);
@@ -103,7 +113,7 @@ public class SinchCodeCollectorNodeTests {
     }
 
     @Test
-    public void testProcessWithWrongCode() {
+    public void testProcessWithWrongCode() throws NodeProcessException {
         Mockito.when(config.isCodeHidden()).thenReturn(true);
         PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
         passwordCallback.setPassword(FAKE_CODE.toCharArray());
@@ -118,7 +128,7 @@ public class SinchCodeCollectorNodeTests {
     }
 
     @Test
-    public void testProcessWithApiException() {
+    public void testProcessWithApiException() throws NodeProcessException {
         Mockito.when(config.isCodeHidden()).thenReturn(true);
         PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
         passwordCallback.setPassword(FAKE_CODE.toCharArray());

@@ -3,6 +3,7 @@ package com.sinch.authNode;
 import com.google.common.collect.ImmutableMap;
 import com.iplanet.sso.SSOException;
 import com.sinch.authNode.service.SinchApiService;
+import com.sinch.authNode.service.SinchAuxService;
 import com.sinch.verification.metadata.factory.DefaultJVMMetadataFactory;
 import com.sinch.verification.model.ApiErrorData;
 import com.sinch.verification.model.VerificationMethodType;
@@ -18,6 +19,7 @@ import org.forgerock.openam.auth.node.api.NodeProcessException;
 import org.forgerock.openam.auth.node.api.TreeContext;
 import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.core.realms.Realm;
+import org.forgerock.openam.sm.AnnotatedServiceRegistry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,6 +61,12 @@ public class SinchAuthenticationNodeTests {
     @Mock
     private SinchApiService sinchApiService;
 
+    @Mock
+    private AnnotatedServiceRegistry annotatedServiceRegistry;
+
+    @Mock
+    private SinchAuxService sinchAuxService;
+
     private SinchAuthenticationNode sinchAuthenticationNode;
     private TreeContext context;
 
@@ -69,7 +77,7 @@ public class SinchAuthenticationNodeTests {
         MockitoAnnotations.openMocks(this).close();
         factoryMatcher = (argument -> argument.getPlatform().equals("Forgerock"));
         context = buildThreeContext(emptyList());
-        sinchAuthenticationNode = new SinchAuthenticationNode(config, realm, coreWrapper, sinchApiService);
+        sinchAuthenticationNode = new SinchAuthenticationNode(config, realm, coreWrapper, sinchApiService, annotatedServiceRegistry);
     }
 
     private JsonValue retrieveSharedState() {
@@ -180,8 +188,8 @@ public class SinchAuthenticationNodeTests {
 
     private void injectDefaultConfig() {
         Mockito.when(config.identityPhoneNumberAttribute()).thenReturn("telephoneNumber");
-        Mockito.when(config.appKey()).thenReturn(FAKE_APP_KEY);
-        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET);
+//        Mockito.when(config.appKey()).thenReturn(FAKE_APP_KEY);
+//        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET);
         Mockito.when(config.verificationMethod()).thenReturn(FAKE_METHOD);
     }
 

@@ -3,12 +3,15 @@ package com.sinch.authNode;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.sinch.authNode.service.SinchServiceAccessHelpers;
 import com.sinch.authNode.service.SinchApiService;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.verification.VerificationResponseData;
 import com.sinch.verification.model.verification.VerificationStatus;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
+import org.forgerock.openam.core.realms.Realm;
+import org.forgerock.openam.sm.AnnotatedServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,30 +33,38 @@ import static com.sinch.authNode.SinchAuthenticationNode.*;
         configClass = SinchCodeCollectorCodeNode.Config.class)
 public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
 
-    private static final String BUNDLE = "com/sinch/authNode/SinchCodeCollectorCodeNode";
+    private static final String BUNDLE = SinchCodeCollectorCodeNode.class.getName();
 
     private final Logger logger = LoggerFactory.getLogger(SinchCodeCollectorCodeNode.class);
     private final Config config;
     private final SinchApiService sinchApiService;
+    private final Realm realm;
+    private final AnnotatedServiceRegistry annotatedServiceRegistry;
+    private final SinchServiceAccessHelpers sinchServiceAccessHelpers = new SinchServiceAccessHelpers();
 
     /**
      * Creates the node
      *
      * @param config          The service config.
+     * @param realm           The realm of the node.
      * @param sinchApiService Service responsible for communication with Sinch Rest API Service.
+     * @param annotatedServiceRegistry Instance of AnnotatedServiceRegistry.
      */
     @Inject
-    public SinchCodeCollectorCodeNode(@Assisted Config config, SinchApiService sinchApiService) {
+    public SinchCodeCollectorCodeNode(@Assisted Config config, @Assisted Realm realm,
+                                      SinchApiService sinchApiService, AnnotatedServiceRegistry annotatedServiceRegistry) {
         this.config = config;
         this.sinchApiService = sinchApiService;
+        this.realm = realm;
+        this.annotatedServiceRegistry = annotatedServiceRegistry;
     }
 
     @Override
-    public Action process(TreeContext treeContext) {
+    public Action process(TreeContext treeContext) throws NodeProcessException {
         String verificationCode = getVerificationCode(treeContext, config.isCodeHidden()).orElse(null);
         String verificationId = treeContext.getState(SinchAuthenticationNode.INITIATED_ID_KEY).asString();
-        String appKey = treeContext.getState(APP_KEY_KEY).asString();
-        String appSecret = treeContext.getState(APP_SECRET_KEY).asString();
+        String appKey = sinchServiceAccessHelpers.getAppKeyOrThrow(annotatedServiceRegistry, realm);
+        String appSecret = sinchServiceAccessHelpers.getAppSecretOrThrow(annotatedServiceRegistry, realm);
         VerificationMethodType method = VerificationMethodType.valueOf(treeContext.getState(VER_METHOD_KEY).asString());
         logger.debug("Process of SinchCodeCollectorCodeNode called. Verification code: " + verificationCode +
                 " verificationId: " + verificationId + "appKey" + appKey + " method: " + method);

@@ -16,10 +16,16 @@
 
 package com.sinch.authNode;
 
+import com.iplanet.sso.SSOToken;
+import com.sinch.authNode.service.SinchAuxService;
+import com.sun.identity.security.AdminTokenAction;
+import com.sun.identity.sm.ServiceManager;
 import org.forgerock.openam.auth.node.api.AbstractNodeAmPlugin;
 import org.forgerock.openam.auth.node.api.Node;
 import org.forgerock.openam.plugins.PluginException;
+import org.forgerock.openam.plugins.PluginTools;
 
+import java.security.AccessController;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -95,6 +101,18 @@ public class SinchAuthNodePlugin extends AbstractNodeAmPlugin {
     @Override
     public void upgrade(String fromVersion) throws PluginException {
         super.upgrade(fromVersion);
+        SSOToken adminToken = AccessController.doPrivileged(AdminTokenAction.getInstance());
+        if (fromVersion.equals(PluginTools.DEVELOPMENT_VERSION)) {
+            try {
+                ServiceManager sm = new ServiceManager(adminToken);
+                if (sm.getServiceNames().contains("SinchAuxService")) {
+                    sm.removeService("SinchAuxService", "1.0");
+                }
+                pluginTools.installService(SinchAuxService.class);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
