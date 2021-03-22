@@ -75,11 +75,6 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
         }
     }
 
-    @Override
-    public InputState[] getInputs() {
-        return new InputState[]{new InputState(APP_KEY_KEY), new InputState(APP_SECRET_KEY)};
-    }
-
     private Optional<String> getVerificationCode(TreeContext treeContext, boolean isCodeHidden) {
         if (isCodeHidden) {
             return treeContext.getCallback(PasswordCallback.class).map(PasswordCallback::getPassword).map(String::new);

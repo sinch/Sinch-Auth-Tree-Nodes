@@ -51,8 +51,6 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     static final String USER_PHONE_KEY = "phoneNumberKey";
     static final String INITIATED_ID_KEY = "initiatedIdKey";
-    static final String APP_KEY_KEY = "appHashKey";
-    static final String APP_SECRET_KEY = "appSecretKey";
     static final String VER_METHOD_KEY = "verMethodKey";
 
     private static final String BUNDLE = SinchAuthenticationNode.class.getName();
@@ -97,11 +95,6 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                     buildInputPhoneNumberAction(bundleFromContext(context)) :
                     processInitiation(context, phoneNumber);
         }
-    }
-
-    @Override
-    public OutputState[] getOutputs() {
-        return new OutputState[]{new OutputState(APP_KEY_KEY), new OutputState(APP_SECRET_KEY)};
     }
 
     private Action processInitiation(TreeContext context, String userPhone) throws NodeProcessException {

@@ -159,8 +159,7 @@ public class SinchCodeCollectorNodeTests {
     }
 
     private JsonValue retrieveTransientState() {
-        return json(object(field(SinchAuthenticationNode.APP_KEY_KEY, FAKE_APP_KEY),
-                field(SinchAuthenticationNode.APP_SECRET_KEY, FAKE_APP_SECRET)));
+        return json(object());
     }
 
     private TreeContext buildTreeContext(List<Callback> callbacks) {
