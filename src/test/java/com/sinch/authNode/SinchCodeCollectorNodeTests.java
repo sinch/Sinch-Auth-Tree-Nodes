@@ -72,6 +72,7 @@ public class SinchCodeCollectorNodeTests {
 
     @Test
     public void testProcessWhenCodePassedAsPassword() {
+        injectDefaultConfig();
         Mockito.when(config.isCodeHidden()).thenReturn(true);
         PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
         passwordCallback.setPassword(FAKE_CODE.toCharArray());
@@ -88,6 +89,7 @@ public class SinchCodeCollectorNodeTests {
 
     @Test
     public void testProcessWhenCodePassedAsNameCallback() {
+        injectDefaultConfig();
         Mockito.when(config.isCodeHidden()).thenReturn(false);
         NameCallback nameCallback = new NameCallback("prompt", "dn");
         nameCallback.setName(FAKE_CODE);
@@ -104,6 +106,7 @@ public class SinchCodeCollectorNodeTests {
 
     @Test
     public void testProcessWithWrongCode() {
+        injectDefaultConfig();
         Mockito.when(config.isCodeHidden()).thenReturn(true);
         PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
         passwordCallback.setPassword(FAKE_CODE.toCharArray());
@@ -150,13 +153,17 @@ public class SinchCodeCollectorNodeTests {
     }
 
     private JsonValue retrieveTransientState() {
-        return json(object(field(SinchAuthenticationNode.APP_KEY_KEY, FAKE_APP_KEY),
-                field(SinchAuthenticationNode.APP_SECRET_KEY, FAKE_APP_SECRET)));
+        return json(object(0));
     }
 
     private TreeContext buildTreeContext(List<Callback> callbacks) {
         return new TreeContext(retrieveSharedState(), retrieveTransientState(),
                 new ExternalRequestContext.Builder().build(), callbacks, Optional.of("mockUserId"));
+    }
+
+    private void injectDefaultConfig() {
+        Mockito.when(config.appKey()).thenReturn(FAKE_APP_KEY);
+        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET);
     }
 
 }

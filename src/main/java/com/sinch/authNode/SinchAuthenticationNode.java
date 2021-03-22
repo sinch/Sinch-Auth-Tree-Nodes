@@ -49,11 +49,9 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     static final String USER_PHONE_KEY = "phoneNumberKey";
     static final String INITIATED_ID_KEY = "initiatedIdKey";
-    static final String APP_KEY_KEY = "appHashKey";
-    static final String APP_SECRET_KEY = "appSecretKey";
     static final String VER_METHOD_KEY = "verMethodKey";
 
-    private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
+    private static final String BUNDLE = SinchAuthenticationNode.class.getName();
     private static final String PLATFORM = "Forgerock";
 
     private final Logger logger = LoggerFactory.getLogger(SinchAuthenticationNode.class);
@@ -91,11 +89,6 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         }
     }
 
-    @Override
-    public OutputState[] getOutputs() {
-        return new OutputState[]{new OutputState(APP_KEY_KEY), new OutputState(APP_SECRET_KEY)};
-    }
-
     private Action processInitiation(TreeContext context, String userPhone) throws NodeProcessException {
         String verificationId;
         VerificationMethodType verificationMethod = config.verificationMethod().asSinchMethodType();
@@ -109,8 +102,6 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
                 .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, verificationMethod.toString()))
-                .replaceTransientState(context.transientState.put(APP_KEY_KEY, config.appKey()))
-                .replaceTransientState(context.transientState.put(APP_SECRET_KEY, config.appSecret()))
                 .build();
     }
 
