@@ -9,7 +9,11 @@ import com.sinch.verification.model.verification.VerificationResponseData;
 import com.sinch.verification.model.verification.VerificationStatus;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
-import org.forgerock.openam.auth.node.api.*;
+import org.forgerock.openam.auth.node.api.AbstractDecisionNode;
+import org.forgerock.openam.auth.node.api.Action;
+import org.forgerock.openam.auth.node.api.Node;
+import org.forgerock.openam.auth.node.api.TreeContext;
+import org.forgerock.openam.sm.annotations.adapters.Password;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-import static com.sinch.authNode.SinchAuthenticationNode.*;
+import static com.sinch.authNode.SinchAuthenticationNode.VER_METHOD_KEY;
 
 /**
  * A node that performs actual verification code check against Sinch backend.
@@ -54,7 +58,7 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
         String verificationCode = getVerificationCode(treeContext, config.isCodeHidden()).orElse(null);
         String verificationId = treeContext.getState(SinchAuthenticationNode.INITIATED_ID_KEY).asString();
         String appKey = config.appKey();
-        String appSecret = config.appSecret();
+        String appSecret = String.valueOf(config.appSecret());
         VerificationMethodType method = VerificationMethodType.valueOf(treeContext.getState(VER_METHOD_KEY).asString());
         logger.debug("Process of SinchCodeCollectorCodeNode called. Verification code: " + verificationCode +
                 " verificationId: " + verificationId + "appKey" + appKey + " method: " + method);
@@ -121,9 +125,8 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
          * Application secret copied from Sinch portal.
          */
         @Attribute(order = 2, validators = {RequiredValueValidator.class})
-        default String appSecret() {
-            return "";
-        }
+        @Password
+        char[] appSecret();
 
         /**
          * Enable whether the one-time password should be a password.

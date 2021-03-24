@@ -28,6 +28,7 @@ import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
 import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.core.realms.Realm;
+import org.forgerock.openam.sm.annotations.adapters.Password;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +94,7 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         String verificationId;
         VerificationMethodType verificationMethod = config.verificationMethod().asSinchMethodType();
         try {
-            verificationId = initiateVerification(config.appKey(), config.appSecret(), formatPhoneNumber(userPhone), verificationMethod).getId();
+            verificationId = initiateVerification(config.appKey(), String.valueOf(config.appSecret()), formatPhoneNumber(userPhone), verificationMethod).getId();
         } catch (Exception e) {
             return askForPhoneNumberIfPossibleBasedOnException(e, bundleFromContext(context));
         }
@@ -180,9 +181,8 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
          * Application secret copied from Sinch portal.
          */
         @Attribute(order = 2, validators = {RequiredValueValidator.class})
-        default String appSecret() {
-            return "";
-        }
+        @Password
+        char[] appSecret();
 
         /**
          * Verification method used to verify user's phone number.

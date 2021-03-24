@@ -44,6 +44,7 @@ public class SinchCodeCollectorNodeTests {
         MockitoAnnotations.openMocks(this).close();
         context = buildTreeContext(emptyList());
         sinchCodeCollectorCodeNode = new SinchCodeCollectorCodeNode(config, sinchApiService);
+        injectDefaultConfig();
     }
 
     @Test
@@ -72,7 +73,6 @@ public class SinchCodeCollectorNodeTests {
 
     @Test
     public void testProcessWhenCodePassedAsPassword() {
-        injectDefaultConfig();
         Mockito.when(config.isCodeHidden()).thenReturn(true);
         PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
         passwordCallback.setPassword(FAKE_CODE.toCharArray());
@@ -89,7 +89,6 @@ public class SinchCodeCollectorNodeTests {
 
     @Test
     public void testProcessWhenCodePassedAsNameCallback() {
-        injectDefaultConfig();
         Mockito.when(config.isCodeHidden()).thenReturn(false);
         NameCallback nameCallback = new NameCallback("prompt", "dn");
         nameCallback.setName(FAKE_CODE);
@@ -106,7 +105,6 @@ public class SinchCodeCollectorNodeTests {
 
     @Test
     public void testProcessWithWrongCode() {
-        injectDefaultConfig();
         Mockito.when(config.isCodeHidden()).thenReturn(true);
         PasswordCallback passwordCallback = new PasswordCallback("prompt", false);
         passwordCallback.setPassword(FAKE_CODE.toCharArray());
@@ -163,7 +161,7 @@ public class SinchCodeCollectorNodeTests {
 
     private void injectDefaultConfig() {
         Mockito.when(config.appKey()).thenReturn(FAKE_APP_KEY);
-        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET);
+        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET.toCharArray());
     }
 
 }

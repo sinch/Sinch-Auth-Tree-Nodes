@@ -42,6 +42,12 @@ This node prompts the user to enter the verification code that depending on the 
 * **Flashcall** - Full number of the incoming call. (formatted according to [E.164](http://en.wikipedia.org/wiki/E.164) specification and prefixed with `+`).
 * **Callout** - The code is spoken by text-to-speech software after picking up the incoming phone call.
 
+Properties of the node:
+
+* **appKey** - Application key for your application found in the Sinch Verification Portal dashboard.
+* **appSecret** - Application secret for your application found in the Sinch Verification Portal dashboard.
+* **isCodehidden** - If enabled it hides the code text from the end user (looking like password collector).
+
 ### Example flow
 
 The example flow presents a login page where user enters his credentials, then if present it validates the number taken from the profile or asks the user to enter it manually.

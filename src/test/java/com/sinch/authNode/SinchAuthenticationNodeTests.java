@@ -181,7 +181,7 @@ public class SinchAuthenticationNodeTests {
     private void injectDefaultConfig() {
         Mockito.when(config.identityPhoneNumberAttribute()).thenReturn("telephoneNumber");
         Mockito.when(config.appKey()).thenReturn(FAKE_APP_KEY);
-        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET);
+        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET.toCharArray());
         Mockito.when(config.verificationMethod()).thenReturn(FAKE_METHOD);
     }
 
