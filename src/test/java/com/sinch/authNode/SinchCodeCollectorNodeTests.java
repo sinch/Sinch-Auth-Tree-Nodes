@@ -44,6 +44,7 @@ public class SinchCodeCollectorNodeTests {
         MockitoAnnotations.openMocks(this).close();
         context = buildTreeContext(emptyList());
         sinchCodeCollectorCodeNode = new SinchCodeCollectorCodeNode(config, sinchApiService);
+        injectDefaultConfig();
     }
 
     @Test
@@ -150,13 +151,17 @@ public class SinchCodeCollectorNodeTests {
     }
 
     private JsonValue retrieveTransientState() {
-        return json(object(field(SinchAuthenticationNode.APP_KEY_KEY, FAKE_APP_KEY),
-                field(SinchAuthenticationNode.APP_SECRET_KEY, FAKE_APP_SECRET)));
+        return json(object(0));
     }
 
     private TreeContext buildTreeContext(List<Callback> callbacks) {
         return new TreeContext(retrieveSharedState(), retrieveTransientState(),
                 new ExternalRequestContext.Builder().build(), callbacks, Optional.of("mockUserId"));
+    }
+
+    private void injectDefaultConfig() {
+        Mockito.when(config.appKey()).thenReturn(FAKE_APP_KEY);
+        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET.toCharArray());
     }
 
 }

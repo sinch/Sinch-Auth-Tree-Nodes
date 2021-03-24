@@ -28,6 +28,7 @@ import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
 import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.core.realms.Realm;
+import org.forgerock.openam.sm.annotations.adapters.Password;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,11 +50,9 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     static final String USER_PHONE_KEY = "phoneNumberKey";
     static final String INITIATED_ID_KEY = "initiatedIdKey";
-    static final String APP_KEY_KEY = "appHashKey";
-    static final String APP_SECRET_KEY = "appSecretKey";
     static final String VER_METHOD_KEY = "verMethodKey";
 
-    private static final String BUNDLE = "com/sinch/authNode/SinchAuthenticationNode";
+    private static final String BUNDLE = SinchAuthenticationNode.class.getName();
     private static final String PLATFORM = "Forgerock";
 
     private final Logger logger = LoggerFactory.getLogger(SinchAuthenticationNode.class);
@@ -91,16 +90,11 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
         }
     }
 
-    @Override
-    public OutputState[] getOutputs() {
-        return new OutputState[]{new OutputState(APP_KEY_KEY), new OutputState(APP_SECRET_KEY)};
-    }
-
     private Action processInitiation(TreeContext context, String userPhone) throws NodeProcessException {
         String verificationId;
         VerificationMethodType verificationMethod = config.verificationMethod().asSinchMethodType();
         try {
-            verificationId = initiateVerification(config.appKey(), config.appSecret(), formatPhoneNumber(userPhone), verificationMethod).getId();
+            verificationId = initiateVerification(config.appKey(), String.valueOf(config.appSecret()), formatPhoneNumber(userPhone), verificationMethod).getId();
         } catch (Exception e) {
             return askForPhoneNumberIfPossibleBasedOnException(e, bundleFromContext(context));
         }
@@ -109,8 +103,6 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
                 .replaceSharedState(context.sharedState.put(INITIATED_ID_KEY, verificationId))
                 .replaceSharedState(context.sharedState.put(USER_PHONE_KEY, userPhone))
                 .replaceSharedState(context.sharedState.put(VER_METHOD_KEY, verificationMethod.toString()))
-                .replaceTransientState(context.transientState.put(APP_KEY_KEY, config.appKey()))
-                .replaceTransientState(context.transientState.put(APP_SECRET_KEY, config.appSecret()))
                 .build();
     }
 
@@ -189,9 +181,8 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
          * Application secret copied from Sinch portal.
          */
         @Attribute(order = 2, validators = {RequiredValueValidator.class})
-        default String appSecret() {
-            return "";
-        }
+        @Password
+        char[] appSecret();
 
         /**
          * Verification method used to verify user's phone number.

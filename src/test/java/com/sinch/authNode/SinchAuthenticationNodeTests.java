@@ -181,7 +181,7 @@ public class SinchAuthenticationNodeTests {
     private void injectDefaultConfig() {
         Mockito.when(config.identityPhoneNumberAttribute()).thenReturn("telephoneNumber");
         Mockito.when(config.appKey()).thenReturn(FAKE_APP_KEY);
-        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET);
+        Mockito.when(config.appSecret()).thenReturn(FAKE_APP_SECRET.toCharArray());
         Mockito.when(config.verificationMethod()).thenReturn(FAKE_METHOD);
     }
 
@@ -213,7 +213,6 @@ public class SinchAuthenticationNodeTests {
         Assertions.assertEquals(FAKE_ID, action.sharedState.get(INITIATED_ID_KEY).asString());
         Assertions.assertEquals(FAKE_METHOD.toString(), action.sharedState.get(SinchAuthenticationNode.VER_METHOD_KEY).asString());
         Assertions.assertEquals(FAKE_NUM, action.sharedState.get(SinchAuthenticationNode.USER_PHONE_KEY).asString());
-        Assertions.assertEquals(FAKE_APP_KEY, action.transientState.get(SinchAuthenticationNode.APP_KEY_KEY).asString());
     }
 
     private TreeContext buildThreeContext(List<Callback> callbacks) {
