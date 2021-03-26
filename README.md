@@ -11,10 +11,10 @@
 
 
 # Sinch CPaaS
-**[Sinch](https://go.sinch.com/l/151751/2021-02-26/ywl2mp)** is a global Communications Platform as a Service (CPaaS) which offers Marketing, Commerce, and Support conversational AI, a complete set of messaging, rich media, voice, and video channels. In addition to communications Sinch provides a robust and flexible Verification service powering user registration, account recovery, authentication, and phone number validation use cases.    
+**[Sinch](https://go.sinch.com/l/151751/2021-02-26/ywl2mp)** is a global Communications Platform as a Service (CPaaS) which offers Marketing, Commerce, and Support teams AI driven CX automation tools and a complete set of messaging, rich media, voice, and video channels. In addition to automation, communication channels, and network connectivity Sinch provides a robust and flexible Verification service powering user registration, account recovery, authentication, and phone number validation use cases.    
 
 # About Sinch Verification
-Sinch Verification consists of different software development kits – the Sinch SDKs – that you integrate with your smartphone (iOS, Android) or web application.  Coupled to   the Forge Rock Access Management, Sinch Verification can enable global SMS, Flash Call, and Voice IVR Callout verification and One Time Passcode (OTP) services for your customer mobile applications and online services.
+Sinch Verification consists of different software development kits – the Sinch SDKs – that you integrate with your smartphone (iOS, Android) or web application.  Coupled to   Forge Rock Access Management, Sinch Verification can enable global SMS, Flash Call, and Voice IVR Callout verification and One Time Passcode (OTP) services for your customer mobile applications and online services.
 
 The Sinch Verification methods include:
 1. **[SMS](https://go.sinch.com/l/151751/2021-02-26/ywl2my)**  - Number is verified using a configurable length 4-8 digit code that is sent in a SMS message. On Android, automatic code extraction is available, however on iOS an input field must be always presented and the number has to be typed manually by the user.
