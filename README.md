@@ -1,15 +1,3 @@
-
-**Details**
-
-**Categories:** ForgeRock Access Management
-
-**License:** Unkown
-
-**Supported by:** [Sinch](https://go.sinch.com/l/151751/2021-02-26/ywl2mp)
-
-**Repository:**  [Sinch GitHub Repository](https://go.sinch.com/l/151751/2021-02-26/ywl2m5)
-
-
 # Sinch CPaaS
 **[Sinch](https://go.sinch.com/l/151751/2021-02-26/ywl2mp)** is a global Communications Platform as a Service (CPaaS) which offers Marketing, Commerce, and Support teams AI driven CX automation tools and a complete set of messaging, rich media, voice, and video channels. In addition to automation, communication channels, and network connectivity Sinch provides a robust and flexible Verification service powering user registration, account recovery, authentication, and phone number validation use cases.    
 
