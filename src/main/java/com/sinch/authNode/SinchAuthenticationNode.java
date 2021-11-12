@@ -23,6 +23,8 @@ import com.sinch.verification.metadata.factory.DefaultJVMMetadataFactory;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
 import com.sinch.verification.process.ApiCallException;
+import com.sun.identity.idm.AMIdentity;
+import com.sun.identity.idm.IdUtils;
 import com.sun.identity.sm.RequiredValueValidator;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.*;
@@ -135,7 +137,8 @@ public class SinchAuthenticationNode extends SingleOutcomeNode {
 
     private String readProfilePhoneNumber(String username) {
         try {
-            String phoneProfileNumber = String.valueOf(coreWrapper.getIdentity(username, realm).getAttributes().get(config.identityPhoneNumberAttribute()));
+            AMIdentity identity = IdUtils.getIdentity(username, realm);
+            String phoneProfileNumber = String.valueOf(identity.getAttributes().get(config.identityPhoneNumberAttribute()));
             return isProfileNumberValid(phoneProfileNumber) ? phoneProfileNumber : null;
         } catch (Exception e) {
             logger.debug("Exception while getting user phone number from profile " + e.getLocalizedMessage());

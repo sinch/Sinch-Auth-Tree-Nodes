@@ -1,7 +1,5 @@
 package com.sinch.authNode;
 
-import com.sinch.verification.model.VerificationMethodType;
-
 public class TestConstants {
 
     public static final String FAKE_APP_KEY = "appKey";

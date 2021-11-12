@@ -26,10 +26,12 @@
     <groupId>com.sinch</groupId>
     <version>1.0.0</version>
     <name>Sinch Authentication Tree Node</name>
-    <description>An Authentication Tree Node for ForgeRock's Identity Platform integrating Sinch Verification services with AM.</description>
+    <description>An Authentication Tree Node for ForgeRock's Identity Platform integrating Sinch Verification services
+        with AM.
+    </description>
 
     <properties>
-        <am.version>7.0.0</am.version>
+        <am.version>6.5.0</am.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
