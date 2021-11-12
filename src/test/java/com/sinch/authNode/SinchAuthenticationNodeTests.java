@@ -1,16 +1,11 @@
 package com.sinch.authNode;
 
-import com.google.common.collect.ImmutableMap;
-import com.iplanet.sso.SSOException;
 import com.sinch.authNode.service.SinchApiService;
 import com.sinch.verification.metadata.factory.DefaultJVMMetadataFactory;
-import com.sinch.verification.model.ApiErrorData;
 import com.sinch.verification.model.VerificationMethodType;
 import com.sinch.verification.model.initiation.InitiationResponseData;
 import com.sinch.verification.model.initiation.methods.AutoInitializationResponseDetails;
-import com.sinch.verification.process.ApiCallException;
 import com.sun.identity.idm.AMIdentity;
-import com.sun.identity.idm.IdRepoException;
 import org.forgerock.json.JsonValue;
 import org.forgerock.openam.auth.node.api.Action;
 import org.forgerock.openam.auth.node.api.ExternalRequestContext;
@@ -32,8 +27,6 @@ import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.TextOutputCallback;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import static com.sinch.authNode.SinchAuthenticationNode.INITIATED_ID_KEY;
 import static com.sinch.authNode.TestConstants.*;
@@ -77,51 +70,6 @@ public class SinchAuthenticationNodeTests {
     }
 
     @Test
-    public void testProcessActionWhenNoUserPhoneInProfile() throws NodeProcessException {
-        Action result = sinchAuthenticationNode.process(context);
-        Assertions.assertEquals(2, result.callbacks.size());
-        Callback prompt = result.callbacks.get(0);
-        Callback enterPhone = result.callbacks.get(1);
-        Assertions.assertTrue(prompt instanceof TextOutputCallback);
-        Assertions.assertTrue(enterPhone instanceof NameCallback);
-    }
-
-    @Test
-    public void testProcessWhenPhoneNumberInProfile() throws IdRepoException, SSOException, NodeProcessException {
-        injectDefaultConfig();
-        mockSuccessfulRestApiCall();
-        Map attributeMap = ImmutableMap.of(config.identityPhoneNumberAttribute(), FAKE_NUM);
-        Mockito.when(mockUser.getAttributes()).thenReturn(attributeMap);
-        Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
-
-        Action result = sinchAuthenticationNode.process(context);
-        Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(FAKE_APP_SECRET), eq(VerificationMethodType.SMS), eq(FAKE_NUM), argThat(factoryMatcher));
-        Assert.assertEquals(result.outcome, "outcome");
-        verifyOutcomeSharedState(result);
-    }
-
-    @Test
-    public void testProcessWhenMalformedProfileNumber() throws NodeProcessException, IdRepoException, SSOException {
-        injectDefaultConfig();
-        mockSuccessfulRestApiCall();
-
-        Map attributeMap = ImmutableMap.of(config.identityPhoneNumberAttribute(), "");
-        Mockito.when(mockUser.getAttributes()).thenReturn(attributeMap);
-        Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
-
-        verifyProcessProducesExplicitPhoneNumberInputRequest();
-    }
-
-    @Test
-    public void testProcessWhenApiReturnsPhoneNumberFormattingError() throws NodeProcessException {
-        injectDefaultConfig();
-        mockExceptionWhileMakingRestCall(
-                new ApiCallException(new ApiErrorData(ApiErrorData.ErrorCodes.ParameterValidation, "", ""))
-        );
-        verifyProcessProducesExplicitPhoneNumberInputRequest();
-    }
-
-    @Test
     public void testProcessWhenNumberInCallback() throws NodeProcessException {
         injectDefaultConfig();
         mockSuccessfulRestApiCall();
@@ -131,23 +79,12 @@ public class SinchAuthenticationNodeTests {
                 new TextOutputCallback(TextOutputCallback.INFORMATION, "ignored"),
                 phoneNumberCallback);
         context = new TreeContext(retrieveSharedState(), json(object()),
-                new ExternalRequestContext.Builder().build(), callbacks
-                , Optional.of("mockUserId"));
+                new ExternalRequestContext.Builder().build(), callbacks);
 
         Action result = sinchAuthenticationNode.process(context);
         Mockito.verify(sinchApiService).initiateSynchronically(eq(FAKE_APP_KEY), eq(FAKE_APP_SECRET), eq(VerificationMethodType.SMS), eq(FAKE_NUM), argThat(factoryMatcher));
         Assert.assertEquals(result.outcome, "outcome");
         verifyOutcomeSharedState(result);
-    }
-
-    @Test
-    public void testProcessFailureWhenExceptionWhileMakingCallToSinchApi() throws IdRepoException, SSOException {
-        injectDefaultConfig();
-        mockExceptionWhileMakingRestCall(new Exception());
-        Map attributeMap = ImmutableMap.of(config.identityPhoneNumberAttribute(), FAKE_NUM);
-        Mockito.when(mockUser.getAttributes()).thenReturn(attributeMap);
-        Mockito.when(coreWrapper.getIdentity(anyString(), any(Realm.class))).thenReturn(mockUser);
-        Assertions.assertThrows(NodeProcessException.class, () -> sinchAuthenticationNode.process(context));
     }
 
     @Test
@@ -193,22 +130,6 @@ public class SinchAuthenticationNodeTests {
                 );
     }
 
-    private void mockExceptionWhileMakingRestCall(Exception exception) {
-        Mockito.when(sinchApiService.initiateSynchronically(anyString(), anyString(), any(), anyString(), any()))
-                .thenAnswer(ignored -> {
-                    throw exception;
-                });
-    }
-
-    private void verifyProcessProducesExplicitPhoneNumberInputRequest() throws NodeProcessException {
-        Action result = sinchAuthenticationNode.process(context);
-        Assertions.assertEquals(2, result.callbacks.size());
-        Callback prompt = result.callbacks.get(0);
-        Callback enterPhone = result.callbacks.get(1);
-        Assertions.assertTrue(prompt instanceof TextOutputCallback);
-        Assertions.assertTrue(enterPhone instanceof NameCallback);
-    }
-
     private void verifyOutcomeSharedState(Action action) {
         Assertions.assertEquals(FAKE_ID, action.sharedState.get(INITIATED_ID_KEY).asString());
         Assertions.assertEquals(FAKE_METHOD.toString(), action.sharedState.get(SinchAuthenticationNode.VER_METHOD_KEY).asString());
@@ -217,8 +138,7 @@ public class SinchAuthenticationNodeTests {
 
     private TreeContext buildThreeContext(List<Callback> callbacks) {
         return new TreeContext(retrieveSharedState(), json(object()),
-                new ExternalRequestContext.Builder().build(), callbacks
-                , Optional.of("mockUserId"));
+                new ExternalRequestContext.Builder().build(), callbacks);
     }
 
 }

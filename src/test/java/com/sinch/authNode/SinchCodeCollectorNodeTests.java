@@ -19,7 +19,6 @@ import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.TextOutputCallback;
 import java.util.List;
-import java.util.Optional;
 
 import static com.sinch.authNode.TestConstants.*;
 import static java.util.Collections.emptyList;
@@ -78,7 +77,7 @@ public class SinchCodeCollectorNodeTests {
         passwordCallback.setPassword(FAKE_CODE.toCharArray());
 
         context = new TreeContext(retrieveSharedState(), retrieveTransientState(),
-                new ExternalRequestContext.Builder().build(), singletonList(passwordCallback), Optional.of("mockUserId"));
+                new ExternalRequestContext.Builder().build(), singletonList(passwordCallback));
         mockVerifyCall(true);
 
         Action result = sinchCodeCollectorCodeNode.process(context);
@@ -94,7 +93,7 @@ public class SinchCodeCollectorNodeTests {
         nameCallback.setName(FAKE_CODE);
 
         context = new TreeContext(retrieveSharedState(), retrieveTransientState(),
-                new ExternalRequestContext.Builder().build(), singletonList(nameCallback), Optional.of("mockUserId"));
+                new ExternalRequestContext.Builder().build(), singletonList(nameCallback));
         mockVerifyCall(true);
 
         Action result = sinchCodeCollectorCodeNode.process(context);
@@ -111,7 +110,7 @@ public class SinchCodeCollectorNodeTests {
         mockVerifyCall(false);
 
         context = new TreeContext(retrieveSharedState(), retrieveTransientState(),
-                new ExternalRequestContext.Builder().build(), singletonList(passwordCallback), Optional.of("mockUserId"));
+                new ExternalRequestContext.Builder().build(), singletonList(passwordCallback));
         Action result = sinchCodeCollectorCodeNode.process(context);
 
         Mockito.verify(sinchApiService).verifySynchronicallyById(FAKE_APP_KEY, FAKE_APP_SECRET, FAKE_ID, FAKE_CODE, FAKE_METHOD.asSinchMethodType());
@@ -125,7 +124,7 @@ public class SinchCodeCollectorNodeTests {
         passwordCallback.setPassword(FAKE_CODE.toCharArray());
 
         context = new TreeContext(retrieveSharedState(), retrieveTransientState(),
-                new ExternalRequestContext.Builder().build(), singletonList(passwordCallback), Optional.of("mockUserId"));
+                new ExternalRequestContext.Builder().build(), singletonList(passwordCallback));
 
         mockErrorWhileMakingCall();
 
@@ -154,9 +153,9 @@ public class SinchCodeCollectorNodeTests {
         return json(object(0));
     }
 
-    private TreeContext buildTreeContext(List<Callback> callbacks) {
+    private TreeContext buildTreeContext(List<? extends Callback> callbacks) {
         return new TreeContext(retrieveSharedState(), retrieveTransientState(),
-                new ExternalRequestContext.Builder().build(), callbacks, Optional.of("mockUserId"));
+                new ExternalRequestContext.Builder().build(), callbacks);
     }
 
     private void injectDefaultConfig() {

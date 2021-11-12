@@ -56,10 +56,10 @@ public class SinchCodeCollectorCodeNode extends AbstractDecisionNode {
     @Override
     public Action process(TreeContext treeContext) {
         String verificationCode = getVerificationCode(treeContext, config.isCodeHidden()).orElse(null);
-        String verificationId = treeContext.getState(SinchAuthenticationNode.INITIATED_ID_KEY).asString();
+        String verificationId = treeContext.sharedState.get(SinchAuthenticationNode.INITIATED_ID_KEY).asString();
         String appKey = config.appKey();
         String appSecret = String.valueOf(config.appSecret());
-        VerificationMethodType method = VerificationMethodType.valueOf(treeContext.getState(VER_METHOD_KEY).asString());
+        VerificationMethodType method = VerificationMethodType.valueOf(treeContext.sharedState.get(VER_METHOD_KEY).asString());
         logger.debug("Process of SinchCodeCollectorCodeNode called. Verification code: " + verificationCode +
                 " verificationId: " + verificationId + "appKey" + appKey + " method: " + method);
         if (verificationCode == null) {
